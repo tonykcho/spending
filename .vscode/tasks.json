@@ -1,0 +1,18 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Start_Dependency_Containers",
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "compose",
+                "-f",
+                "${workspaceFolder}/compose.dev.yaml",
+                "up",
+                "-d",
+                "--no-recreate"
+            ],
+        }
+    ]
+}
