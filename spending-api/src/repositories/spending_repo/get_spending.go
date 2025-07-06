@@ -30,7 +30,7 @@ func GetSpendingByUUId(uid uuid.UUID) *models.SpendingRecord {
 	db := data_access.OpenDatabase()
 	defer db.Close()
 
-	var queryTemplate string = "SELECT * FROM spending_records WHERE spending_records.uuid = %s"
+	var queryTemplate string = "SELECT * FROM spending_records WHERE spending_records.uuid = '%s'"
 	var query string = fmt.Sprintf(queryTemplate, uid.String())
 
 	rows, err := db.Query(query)
@@ -43,6 +43,10 @@ func GetSpendingByUUId(uid uuid.UUID) *models.SpendingRecord {
 }
 
 func readSpendingRecord(rows *sql.Rows) *models.SpendingRecord {
+	if !rows.Next() {
+		return nil
+	}
+
 	var record models.SpendingRecord
 
 	err := rows.Scan(
@@ -55,11 +59,6 @@ func readSpendingRecord(rows *sql.Rows) *models.SpendingRecord {
 		&record.CreatedAt,
 		&record.UpdatedAt)
 
-	if err == sql.ErrNoRows {
-		return nil
-	} else {
-		utils.CheckError(err)
-	}
-
+	utils.CheckError(err)
 	return &record
 }

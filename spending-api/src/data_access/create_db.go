@@ -15,16 +15,16 @@ func CreateDatabase() {
 	if isDatabaseExist(db) {
 		return
 	}
-	query := `CREATE DATABASE go`
+	query := `CREATE DATABASE spending`
 
 	_, err := db.Exec(query)
 	utils.CheckError(err)
 
-	log.Info().Msg("Database 'go' created successfully")
+	log.Info().Msg("Database 'spending' created successfully")
 }
 
 func isDatabaseExist(db *sql.DB) bool {
-	query := `Select 1 FROM pg_database WHERE datname = 'go'`
+	query := `Select 1 FROM pg_database WHERE datname = 'spending'`
 
 	rows := db.QueryRow(query)
 
