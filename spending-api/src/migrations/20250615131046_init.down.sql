@@ -1,1 +1,1 @@
-Drop Table spending;
+Drop Table spending_records;

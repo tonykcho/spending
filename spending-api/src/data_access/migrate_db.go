@@ -10,6 +10,7 @@ import (
 
 func MigrateDatabase() {
 	db := OpenDatabase()
+	defer db.Close()
 
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	utils.CheckError(err)
