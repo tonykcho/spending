@@ -14,7 +14,7 @@ func GetSpendingById(id int) *models.SpendingRecord {
 	db := data_access.OpenDatabase()
 	defer db.Close()
 
-	var queryTemplate string = `SELECT * FROM spending WHERE spending.id = %d`
+	var queryTemplate string = `SELECT * FROM spending_records WHERE id = %d`
 	var query = fmt.Sprintf(queryTemplate, id)
 
 	rows, err := db.Query(query)
@@ -30,7 +30,7 @@ func GetSpendingByUUId(uid uuid.UUID) *models.SpendingRecord {
 	db := data_access.OpenDatabase()
 	defer db.Close()
 
-	var queryTemplate string = "SELECT * FROM spending_records WHERE spending_records.uuid = '%s'"
+	var queryTemplate string = "SELECT * FROM spending_records WHERE uuid = '%s'"
 	var query string = fmt.Sprintf(queryTemplate, uid.String())
 
 	rows, err := db.Query(query)
