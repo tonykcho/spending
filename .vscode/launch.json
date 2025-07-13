@@ -11,6 +11,9 @@
             "mode": "auto",
             "preLaunchTask": "Start_Dependency_Containers",
             "program": "${workspaceFolder}/spending-api/main.go",
+            "env": {
+                "APP_ENV": "dev"
+            },
         }
     ]
 }

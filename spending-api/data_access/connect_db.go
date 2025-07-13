@@ -12,7 +12,7 @@ func OpenDatabase() *sql.DB {
 		return DB // Return existing connection if already opened
 	}
 
-	connectionString := "user=postgres password=pwd dbname=spending sslmode=disable"
+	connectionString := utils.GetDatabaseConnection()
 	DB, err := sql.Open("postgres", connectionString)
 	if err != nil {
 		utils.CheckError(err)
@@ -21,7 +21,7 @@ func OpenDatabase() *sql.DB {
 }
 
 func OpenPostgres() *sql.DB {
-	connectionString := "user=postgres password=pwd sslmode=disable"
+	connectionString := utils.GetPostgresConnection()
 	db, err := sql.Open("postgres", connectionString)
 	if err != nil {
 		utils.CheckError(err)

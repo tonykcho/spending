@@ -1,0 +1,6 @@
+{
+    "ConnectionStrings": {
+        "PostgresConnection": "user=postgres password=pwd sslmode=disable",
+        "DatabaseConnection": "user=postgres password=pwd dbname=spending sslmode=disable"
+    }
+}
