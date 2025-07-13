@@ -16,3 +16,14 @@ func MapSpending(spending models.SpendingRecord) responses.SpendingResponse {
 
 	return response
 }
+
+func MapSpendingList(spendingList []*models.SpendingRecord) []responses.SpendingResponse {
+	var responseList []responses.SpendingResponse
+
+	for _, spending := range spendingList {
+		response := MapSpending(*spending)
+		responseList = append(responseList, response)
+	}
+
+	return responseList
+}

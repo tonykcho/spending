@@ -40,6 +40,27 @@ func GetSpendingByUUId(uid uuid.UUID) *models.SpendingRecord {
 	return record
 }
 
+func GetSpendingList() []*models.SpendingRecord {
+	db := data_access.OpenDatabase()
+
+	var query string = "SELECT * FROM spending_records ORDER BY spending_date DESC"
+
+	rows, err := db.Query(query)
+	utils.CheckError(err)
+	defer rows.Close()
+
+	var records []*models.SpendingRecord
+
+	for rows.Next() {
+		record := readSpendingRecord(rows)
+		if record != nil {
+			records = append(records, record)
+		}
+	}
+
+	return records
+}
+
 func readSpendingRecord(rows *sql.Rows) *models.SpendingRecord {
 	if !rows.Next() {
 		return nil
