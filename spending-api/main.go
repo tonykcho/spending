@@ -20,8 +20,9 @@ func main() {
 	configureDatabase()
 	configureEndpoints(router)
 
-	log.Info().Msg("Server is listening on port 8080")
+	log.Info().Msg("Server is listening on port 8001")
 	http.ListenAndServe(":8001", router)
+	data_access.CloseDatabase() // Ensure the database connection is closed when the server stops
 }
 
 func configureLogging() {

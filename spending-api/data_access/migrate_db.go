@@ -10,11 +10,20 @@ import (
 
 func MigrateDatabase() {
 	db := OpenDatabase()
-	defer db.Close()
 
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	utils.CheckError(err)
 	migration, err := migrate.NewWithDatabaseInstance("file://migrations", "postgres", driver)
+	utils.CheckError(err)
+	migration.Up()
+}
+
+func MigrateTestDatabase() {
+	db := OpenDatabase()
+
+	driver, err := postgres.WithInstance(db, &postgres.Config{})
+	utils.CheckError(err)
+	migration, err := migrate.NewWithDatabaseInstance("file://../migrations", "postgres", driver)
 	utils.CheckError(err)
 	migration.Up()
 }

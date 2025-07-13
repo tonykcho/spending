@@ -10,7 +10,7 @@
             "request": "launch",
             "mode": "auto",
             "preLaunchTask": "Start_Dependency_Containers",
-            "program": "${workspaceFolder}/spending-api/program.go",
+            "program": "${workspaceFolder}/spending-api/main.go",
         }
     ]
 }

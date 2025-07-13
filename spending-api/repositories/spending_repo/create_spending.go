@@ -8,7 +8,6 @@ import (
 
 func InsertSpendingRecord(record models.SpendingRecord) int {
 	db := data_access.OpenDatabase()
-	defer db.Close()
 
 	// Create query to insert a new spending record
 	query := `INSERT INTO spending_records (

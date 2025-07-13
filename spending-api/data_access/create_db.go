@@ -10,7 +10,6 @@ import (
 
 func CreateDatabase() {
 	db := OpenPostgres()
-	defer db.Close()
 
 	if isDatabaseExist(db) {
 		return
@@ -33,13 +32,14 @@ func isDatabaseExist(db *sql.DB) bool {
 
 	var exist bool = false
 
-	if err == nil {
+	switch err {
+	case nil:
 		log.Info().Msg("Database already exists")
 		exist = true
-	} else if err == sql.ErrNoRows {
+	case sql.ErrNoRows:
 		log.Info().Msg("Database does not exist")
 		exist = false
-	} else {
+	default:
 		utils.CheckError(err)
 	}
 
