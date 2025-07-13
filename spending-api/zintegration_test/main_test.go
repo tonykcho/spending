@@ -21,9 +21,9 @@ func TestMain(m *testing.M) {
 	log.Info().Msg("Starting PostgreSQL test container...")
 	pgContainer, err := postgres.Run(ctx,
 		"postgres:latest",
-		postgres.WithDatabase("testdb"),
-		postgres.WithUsername("testuser"),
-		postgres.WithPassword("testpass"),
+		postgres.WithDatabase("test"),
+		postgres.WithUsername("test"),
+		postgres.WithPassword("test"),
 	)
 	utils.CheckError(err)
 	connectionString, err := pgContainer.ConnectionString(ctx, "sslmode=disable")
