@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"spending/data_access"
@@ -11,6 +12,12 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/sdk/resource"
+	"go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 )
 
 func main() {
@@ -19,6 +26,7 @@ func main() {
 	configureLogging()
 	configureDatabase()
 	configureEndpoints(router)
+	configureOpenTelemetry()
 
 	log.Info().Msg("Server is listening on port 8001")
 	http.ListenAndServe(":8001", router)
@@ -50,4 +58,26 @@ func configureDatabase() {
 func configureEndpoints(router *mux.Router) {
 	log.Info().Msg("Adding spending endpoints")
 	spending_handlers.RegisterSpendingHandlers(router)
+}
+
+func configureOpenTelemetry() {
+	ctx := context.Background()
+
+	exporter, err := otlptracegrpc.New(ctx,
+		otlptracegrpc.WithInsecure(),
+		otlptracegrpc.WithEndpoint("localhost:4317"),
+	)
+
+	utils.CheckError(err)
+
+	tp := trace.NewTracerProvider(
+		trace.WithBatcher(exporter),
+		trace.WithResource(resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceNameKey.String("spending-api"),
+		)),
+	)
+
+	otel.SetTracerProvider(tp)
+	log.Info().Msg("OpenTelemetry configured with OTLP exporter")
 }

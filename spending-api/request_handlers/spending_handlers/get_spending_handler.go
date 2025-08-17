@@ -9,9 +9,14 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"go.opentelemetry.io/otel"
 )
 
 func GetSpendingRequestHandler(writer http.ResponseWriter, request *http.Request) {
+	tracer := otel.Tracer("spending-api")
+	_, span := tracer.Start(request.Context(), "GetSpendingRequestHandler")
+	defer span.End()
+
 	routerVars := mux.Vars(request)
 
 	spendingUUId, err := uuid.Parse(routerVars["id"])

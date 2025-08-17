@@ -10,5 +10,19 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  jaeger:
+    image: jaegertracing/all-in-one
+    ports:
+      - 4317:4317 # expose jaeger on port 4317 for local access for development
+      - 4318:4318 # expose jaeger on port 4318 for local access for development
+      - 16686:16686 # expose jaeger on port 16686 for local access for development
+      # labels:
+      # - "traefik.enable=true"
+      # - "traefik.http.routers.jaeger.rule=PathPrefix(`/`)"
+      # - "traefik.http.routers.jaeger.entrypoints=jaeger" # Use the jaeger entrypoint
+      # - "traefik.http.services.jaeger.loadbalancer.server.port=16686"
+      # - "traefik.http.routers.jaeger.rule=Host(`traefik.jaeger.localhost`)"
+
+
 volumes:
   postgres_data:
