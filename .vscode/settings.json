@@ -2,6 +2,9 @@
     "cSpell.words": [
         "datname",
         "dbname",
+        "otlptracegrpc",
+        "promhttp",
+        "semconv",
         "sslmode",
         "testcontainers",
         "zerolog",
