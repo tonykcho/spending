@@ -14,7 +14,7 @@ import (
 
 func GetSpendingRequestHandler(writer http.ResponseWriter, request *http.Request) {
 	tracer := otel.Tracer("spending-api")
-	_, span := tracer.Start(request.Context(), "GetSpendingRequestHandler")
+	context, span := tracer.Start(request.Context(), "DB:GetSpendingByUUId")
 	defer span.End()
 
 	routerVars := mux.Vars(request)
@@ -22,7 +22,7 @@ func GetSpendingRequestHandler(writer http.ResponseWriter, request *http.Request
 	spendingUUId, err := uuid.Parse(routerVars["id"])
 	utils.CheckError(err)
 
-	spending := spending_repo.GetSpendingByUUId(spendingUUId)
+	spending := spending_repo.GetSpendingByUUId(context, spendingUUId)
 
 	if spending == nil {
 		http.Error(writer, "Record not found", http.StatusNotFound)

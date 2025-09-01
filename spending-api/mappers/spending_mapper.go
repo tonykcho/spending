@@ -18,7 +18,7 @@ func MapSpending(spending models.SpendingRecord) responses.SpendingResponse {
 }
 
 func MapSpendingList(spendingList []*models.SpendingRecord) []responses.SpendingResponse {
-	var responseList []responses.SpendingResponse
+	var responseList []responses.SpendingResponse = make([]responses.SpendingResponse, 0)
 
 	for _, spending := range spendingList {
 		response := MapSpending(*spending)

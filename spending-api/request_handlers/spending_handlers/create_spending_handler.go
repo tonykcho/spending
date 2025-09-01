@@ -23,7 +23,7 @@ type CreateSpendingRequest struct {
 func CreateSpendingRequestHandler(writer http.ResponseWriter, request *http.Request) {
 	// Trace the request
 	tracer := otel.Tracer("spending-api")
-	_, span := tracer.Start(request.Context(), "CreateSpendingRequestHandler")
+	context, span := tracer.Start(request.Context(), "CreateSpendingRequestHandler")
 	defer span.End()
 
 	// Parse the request body into CreateSpendingRequest struct
@@ -55,7 +55,7 @@ func CreateSpendingRequestHandler(writer http.ResponseWriter, request *http.Requ
 	// Insert the record into the database
 	id := spending_repo.InsertSpendingRecord(record)
 
-	spending := spending_repo.GetSpendingById(id)
+	spending := spending_repo.GetSpendingById(context, id)
 	response := mappers.MapSpending(*spending)
 
 	// Return 201 created response

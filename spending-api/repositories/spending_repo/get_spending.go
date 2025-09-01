@@ -1,6 +1,7 @@
 package spending_repo
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"spending/data_access"
@@ -8,9 +9,14 @@ import (
 	"spending/utils"
 
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel"
 )
 
-func GetSpendingById(id int) *models.SpendingRecord {
+func GetSpendingById(context context.Context, id int) *models.SpendingRecord {
+	tracer := otel.Tracer("spending-api")
+	_, span := tracer.Start(context, "DB:GetSpendingById")
+	defer span.End()
+
 	db := data_access.OpenDatabase()
 
 	var queryTemplate string = `SELECT * FROM spending_records WHERE id = %d`
@@ -25,7 +31,10 @@ func GetSpendingById(id int) *models.SpendingRecord {
 	return record
 }
 
-func GetSpendingByUUId(uid uuid.UUID) *models.SpendingRecord {
+func GetSpendingByUUId(context context.Context, uid uuid.UUID) *models.SpendingRecord {
+	tracer := otel.Tracer("spending-api")
+	_, span := tracer.Start(context, "GetSpendingByUUId")
+	defer span.End()
 	db := data_access.OpenDatabase()
 
 	var queryTemplate string = "SELECT * FROM spending_records WHERE uuid = '%s'"
@@ -40,7 +49,10 @@ func GetSpendingByUUId(uid uuid.UUID) *models.SpendingRecord {
 	return record
 }
 
-func GetSpendingList() []*models.SpendingRecord {
+func GetSpendingList(context context.Context) []*models.SpendingRecord {
+	tracer := otel.Tracer("spending-api")
+	_, span := tracer.Start(context, "DB:GetSpendingList")
+	defer span.End()
 	db := data_access.OpenDatabase()
 
 	var query string = "SELECT * FROM spending_records ORDER BY spending_date DESC"
