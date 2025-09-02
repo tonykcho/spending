@@ -15,33 +15,32 @@ services:
     ports:
       - 4317:4317 # expose jaeger on port 4317 for local access for development
       - 4318:4318 # expose jaeger on port 4318 for local access for development
-      - 16686:16686 # expose jaeger on port 16686 for local access for development
-      # labels:
-      # - "traefik.enable=true"
-      # - "traefik.http.routers.jaeger.rule=PathPrefix(`/`)"
-      # - "traefik.http.routers.jaeger.entrypoints=jaeger" # Use the jaeger entrypoint
-      # - "traefik.http.services.jaeger.loadbalancer.server.port=16686"
-      # - "traefik.http.routers.jaeger.rule=Host(`traefik.jaeger.localhost`)"
+      - 16686 # expose jaeger on port 16686 for local access for development
+    labels:
+    - "traefik.enable=true"
+    - "traefik.http.routers.jaeger.rule=PathPrefix(`/`)"
+    - "traefik.http.routers.jaeger.entrypoints=jaeger" # Use the jaeger entrypoint
+    - "traefik.http.services.jaeger.loadbalancer.server.port=16686"
 
   prometheus:
     image: prom/prometheus
     container_name: prometheus_container
     ports:
-      - 9090:9090 # expose prometheus on port 9090 for local access for development
+      - 9090 # expose prometheus on port 9090 for local access for development
     volumes:
       - ./prometheus.dev.yml:/etc/prometheus/prometheus.yml
-    # labels:
-    #   - "traefik.enable=true"
-    #   - "traefik.http.routers.prometheus.rule=PathPrefix(`/`)"
-    #   - "traefik.http.routers.prometheus.entrypoints=prometheus" # Use the prometheus entrypoint
-    #   - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.prometheus.entrypoints=prometheus" # Use the prometheus entrypoint
+      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
       # - "traefik.http.routers.prometheus.rule=Host(`traefik.prometheus.localhost`)"
 
   loki:
     image: grafana/loki
     container_name: loki_container
     ports:
-      - 3100:3100
+      - 3100
     command: -config.file=/etc/loki/local-config.yaml
 
   promtail:
@@ -58,16 +57,47 @@ services:
     image: grafana/grafana
     container_name: grafana_container
     ports:
-      - 3000:3000
+      - 3000
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.grafana.entrypoints=grafana" # Use the grafana entrypoint
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      # - "traefik.http.routers.grafana.rule=Host(`traefik.grafana.localhost`)"
+
+  traefik:
+    image: traefik
+    container_name: traefik_container
+    command:
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
+      - "--providers.docker"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.grafana.address=:3000" # grafana entrypoint
+      - "--entrypoints.prometheus.address=:9090" # prometheus entrypoint
+      - "--entrypoints.jaeger.address=:16686" # jaeger entrypoint
+      - "--log.level=DEBUG"
+      - "--accesslog=true"
+      - "--accesslog.filepath=/var/log/access.log"
+    ports:
+      - 80:80
+      - 443:443
+      - 3000:3000
+      - 8080:8080
+      - 9090:9090
+      - 16686:16686
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - "./traefik-logs:/var/log" # Mount a directory for log files
     # labels:
     #   - "traefik.enable=true"
-    #   - "traefik.http.routers.grafana.rule=PathPrefix(`/`)"
-    #   - "traefik.http.routers.grafana.entrypoints=grafana" # Use the grafana entrypoint
-    #   - "traefik.http.services.grafana.loadbalancer.server.port=3000"
-      # - "traefik.http.routers.grafana.rule=Host(`traefik.grafana.localhost`)"
+    #   - "traefik.http.routers.traefik.rule=PathPrefix(`/`)"
+    #   - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+    #   - "traefik.http.routers.traefik.entrypoints=custom" # Use the custom entrypoint
 
 volumes:
   postgres_data:
