@@ -3,7 +3,6 @@ package spending_repo
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"spending/data_access"
 	"spending/models"
 	"spending/repositories/category_repo"
@@ -20,10 +19,7 @@ func GetSpendingById(context context.Context, id int) *models.SpendingRecord {
 
 	db := data_access.OpenDatabase()
 
-	var queryTemplate string = `SELECT * FROM spending_records WHERE id = %d`
-	var query = fmt.Sprintf(queryTemplate, id)
-
-	rows, err := db.Query(query)
+	rows, err := db.Query("SELECT * FROM spending_records WHERE id = $1", id)
 	utils.TraceError(span, err)
 	defer rows.Close()
 
@@ -42,19 +38,18 @@ func GetSpendingByUUId(context context.Context, uuid uuid.UUID) *models.Spending
 	defer span.End()
 	db := data_access.OpenDatabase()
 
-	var queryTemplate string = `SELECT
-									id,
-									uuid,
-									amount,
-									remark,
-									spending_date,
-									category_id,
-									created_at,
-									updated_at
-								FROM spending_records WHERE uuid = '%s'`
-	var query string = fmt.Sprintf(queryTemplate, uuid.String())
+	var query string = `SELECT
+							id,
+							uuid,
+							amount,
+							remark,
+							spending_date,
+							category_id,
+							created_at,
+							updated_at
+						FROM spending_records WHERE uuid = $1`
 
-	rows, err := db.Query(query)
+	rows, err := db.Query(query, uuid.String())
 	utils.TraceError(span, err)
 	defer rows.Close()
 
@@ -82,7 +77,8 @@ func GetSpendingList(context context.Context) []*models.SpendingRecord {
 							category_id,
 							created_at,
 							updated_at
-						FROM spending_records ORDER BY spending_date DESC`
+						FROM spending_records
+						ORDER BY spending_date DESC`
 
 	rows, err := db.Query(query)
 	utils.TraceError(span, err)

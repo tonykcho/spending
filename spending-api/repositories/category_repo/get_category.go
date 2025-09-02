@@ -20,10 +20,8 @@ func GetCategoryById(context context.Context, id int) *models.Category {
 
 	db := data_access.OpenDatabase()
 
-	var queryTemplate string = `SELECT * FROM categories WHERE id = %d`
-	var query = fmt.Sprintf(queryTemplate, id)
+	rows, err := db.Query("SELECT * FROM categories WHERE id = $1", id)
 
-	rows, err := db.Query(query)
 	utils.TraceError(span, err)
 	defer rows.Close()
 
@@ -43,10 +41,8 @@ func GetCategoryByUUId(context context.Context, uuid uuid.UUID) *models.Category
 
 	db := data_access.OpenDatabase()
 
-	var queryTemplate string = `SELECT * FROM categories WHERE uuid = '%s'`
-	var query = fmt.Sprintf(queryTemplate, uuid)
+	rows, err := db.Query("SELECT * FROM categories WHERE uuid = $1", uuid)
 
-	rows, err := db.Query(query)
 	utils.TraceError(span, err)
 	defer rows.Close()
 
@@ -95,16 +91,15 @@ func GetCategoryListByIds(context context.Context, ids []int) []*models.Category
 
 	db := data_access.OpenDatabase()
 
-	var query string = `SELECT * FROM categories WHERE id IN (%s)`
-
-	var idList []string
-	for _, id := range ids {
-		idList = append(idList, fmt.Sprintf("%d", id))
+	placeholders := make([]string, len(ids))
+	args := make([]interface{}, len(ids))
+	for i, id := range ids {
+		placeholders[i] = fmt.Sprintf("$%d", i+1)
+		args[i] = id
 	}
+	query := fmt.Sprintf("SELECT * FROM categories WHERE id IN (%s)", strings.Join(placeholders, ","))
+	rows, err := db.Query(query, args...)
 
-	query = fmt.Sprintf(query, strings.Join(idList, ","))
-
-	rows, err := db.Query(query)
 	utils.TraceError(span, err)
 	defer rows.Close()
 
