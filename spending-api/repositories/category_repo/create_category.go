@@ -16,7 +16,7 @@ func InsertCategory(context context.Context, category models.Category) int {
 
 	db := data_access.OpenDatabase()
 
-	query := `INSERT INTO category (
+	query := `INSERT INTO categories (
 				name,
 				created_at,
 				updated_at

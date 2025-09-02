@@ -11,7 +11,11 @@ func MapSpending(spending models.SpendingRecord) responses.SpendingResponse {
 		Amount:       spending.Amount,
 		Remark:       spending.Remark,
 		SpendingDate: spending.SpendingDate,
-		Category:     spending.Category,
+	}
+
+	if spending.Category != nil {
+		category := MapCategory(*spending.Category)
+		response.Category = &category
 	}
 
 	return response

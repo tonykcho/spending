@@ -29,6 +29,8 @@ func GetSpendingRequestHandler(writer http.ResponseWriter, request *http.Request
 		return
 	}
 
+	spending_repo.LoadSpendingCategory(context, spending)
+
 	response := mappers.MapSpending(*spending)
 
 	err = json.NewEncoder(writer).Encode(response)

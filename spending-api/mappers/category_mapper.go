@@ -17,7 +17,7 @@ func MapCategory(category models.Category) responses.CategoryResponse {
 }
 
 func MapCategoryList(categoryList []*models.Category) []responses.CategoryResponse {
-	var responseList []responses.CategoryResponse
+	var responseList []responses.CategoryResponse = make([]responses.CategoryResponse, 0)
 
 	for _, category := range categoryList {
 		response := MapCategory(*category)

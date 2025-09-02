@@ -4,7 +4,7 @@ CREATE TABLE categories (
     name TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-)
+);
 
 ALTER TABLE spending_records
 Drop COLUMN category;

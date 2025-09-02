@@ -11,5 +11,5 @@ type SpendingResponse struct {
 	Amount       float32
 	Remark       string
 	SpendingDate time.Time
-	Category     string
+	Category     *CategoryResponse
 }

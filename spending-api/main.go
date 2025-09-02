@@ -58,10 +58,12 @@ func configureDatabase() {
 }
 
 func configureEndpoints(router *mux.Router) {
-	router.HandleFunc("/spending", spending_handlers.GetSpendingListHandler).Methods("GET")
 	router.HandleFunc("/spending/{id}", spending_handlers.GetSpendingRequestHandler).Methods("GET")
+	router.HandleFunc("/spending", spending_handlers.GetSpendingListHandler).Methods("GET")
 	router.HandleFunc("/spending", spending_handlers.CreateSpendingRequestHandler).Methods("POST")
 
+	router.HandleFunc("/categories/{id}", category_handlers.GetCategoryHandler).Methods("GET")
+	router.HandleFunc("/categories", category_handlers.GetCategoryListHandler).Methods("GET")
 	router.HandleFunc("/categories", category_handlers.CreateCategoryRequestHandler).Methods("POST")
 
 	router.HandleFunc("/metrics", promhttp.Handler().ServeHTTP)

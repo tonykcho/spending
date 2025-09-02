@@ -6,10 +6,12 @@ import (
 	"net/http"
 	"spending/mappers"
 	"spending/models"
+	"spending/repositories/category_repo"
 	"spending/repositories/spending_repo"
 	"spending/utils"
 	"time"
 
+	"github.com/google/uuid"
 	"go.opentelemetry.io/otel"
 )
 
@@ -17,7 +19,7 @@ type CreateSpendingRequest struct {
 	Amount       float32   `json:"amount"`
 	Remark       string    `json:"remark"`
 	SpendingDate time.Time `json:"spending_date"`
-	Category     string    `json:"category"`
+	CategoryId   uuid.UUID `json:"category_id"`
 }
 
 func CreateSpendingRequestHandler(writer http.ResponseWriter, request *http.Request) {
@@ -44,12 +46,19 @@ func CreateSpendingRequestHandler(writer http.ResponseWriter, request *http.Requ
 		return
 	}
 
+	category := category_repo.GetCategoryByUUId(context, command.CategoryId)
+	if category == nil {
+		utils.TraceError(span, fmt.Errorf("category not found"))
+		http.Error(writer, "category not found", http.StatusBadRequest)
+		return
+	}
+
 	// Create a SpendingRecord from the request
 	spending := models.SpendingRecord{
 		Amount:       command.Amount,
 		Remark:       command.Remark,
 		SpendingDate: command.SpendingDate,
-		Category:     command.Category,
+		CategoryId:   category.Id,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
@@ -73,8 +82,8 @@ func validateRequest(request CreateSpendingRequest) error {
 	if request.SpendingDate.IsZero() {
 		return fmt.Errorf("spending date cannot be empty")
 	}
-	if request.Category == "" {
-		return fmt.Errorf("category cannot be empty")
+	if request.CategoryId == uuid.Nil {
+		return fmt.Errorf("category_id cannot be empty")
 	}
 	return nil
 }

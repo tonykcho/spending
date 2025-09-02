@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"spending/data_access"
 	"spending/models"
+	"spending/repositories/category_repo"
 	"spending/utils"
 
 	"github.com/google/uuid"
@@ -26,6 +27,10 @@ func GetSpendingById(context context.Context, id int) *models.SpendingRecord {
 	utils.TraceError(span, err)
 	defer rows.Close()
 
+	if !rows.Next() {
+		return nil
+	}
+
 	record := readSpendingRecord(rows)
 
 	return record
@@ -37,12 +42,25 @@ func GetSpendingByUUId(context context.Context, uuid uuid.UUID) *models.Spending
 	defer span.End()
 	db := data_access.OpenDatabase()
 
-	var queryTemplate string = "SELECT * FROM spending_records WHERE uuid = '%s'"
+	var queryTemplate string = `SELECT
+									id,
+									uuid,
+									amount,
+									remark,
+									spending_date,
+									category_id,
+									created_at,
+									updated_at
+								FROM spending_records WHERE uuid = '%s'`
 	var query string = fmt.Sprintf(queryTemplate, uuid.String())
 
 	rows, err := db.Query(query)
 	utils.TraceError(span, err)
 	defer rows.Close()
+
+	if !rows.Next() {
+		return nil
+	}
 
 	record := readSpendingRecord(rows)
 
@@ -55,7 +73,16 @@ func GetSpendingList(context context.Context) []*models.SpendingRecord {
 	defer span.End()
 	db := data_access.OpenDatabase()
 
-	var query string = "SELECT * FROM spending_records ORDER BY spending_date DESC"
+	var query string = `SELECT 
+							id,
+							uuid,
+							amount,
+							remark,
+							spending_date,
+							category_id,
+							created_at,
+							updated_at
+						FROM spending_records ORDER BY spending_date DESC`
 
 	rows, err := db.Query(query)
 	utils.TraceError(span, err)
@@ -73,11 +100,29 @@ func GetSpendingList(context context.Context) []*models.SpendingRecord {
 	return records
 }
 
-func readSpendingRecord(rows *sql.Rows) *models.SpendingRecord {
-	if !rows.Next() {
-		return nil
+func LoadSpendingCategory(context context.Context, record *models.SpendingRecord) {
+	category := category_repo.GetCategoryById(context, record.CategoryId)
+	record.Category = category
+}
+
+func LoadSpendingListCategory(context context.Context, records []*models.SpendingRecord) {
+	categoryIds := make([]int, 0)
+	for _, record := range records {
+		categoryIds = append(categoryIds, record.CategoryId)
 	}
 
+	categories := category_repo.GetCategoryListByIds(context, categoryIds)
+	categoryMap := make(map[int]*models.Category)
+	for _, category := range categories {
+		categoryMap[category.Id] = category
+	}
+
+	for _, record := range records {
+		record.Category = categoryMap[record.CategoryId]
+	}
+}
+
+func readSpendingRecord(rows *sql.Rows) *models.SpendingRecord {
 	var record models.SpendingRecord
 
 	err := rows.Scan(
@@ -86,7 +131,7 @@ func readSpendingRecord(rows *sql.Rows) *models.SpendingRecord {
 		&record.Amount,
 		&record.Remark,
 		&record.SpendingDate,
-		&record.Category,
+		&record.CategoryId,
 		&record.CreatedAt,
 		&record.UpdatedAt)
 

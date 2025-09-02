@@ -15,7 +15,11 @@ func MigrateDatabase() {
 	utils.CheckError(err)
 	migration, err := migrate.NewWithDatabaseInstance("file://migrations", "postgres", driver)
 	utils.CheckError(err)
-	migration.Up()
+	err = migration.Up()
+
+	if err != nil && err != migrate.ErrNoChange {
+		utils.CheckError(err)
+	}
 }
 
 func MigrateTestDatabase() {

@@ -10,9 +10,9 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func GetCategoriesHandler(writer http.ResponseWriter, request *http.Request) {
+func GetCategoryListHandler(writer http.ResponseWriter, request *http.Request) {
 	tracer := otel.Tracer("spending-api")
-	context, span := tracer.Start(request.Context(), "GetCategoriesHandler")
+	context, span := tracer.Start(request.Context(), "GetCategoryListHandler")
 	defer span.End()
 
 	categories := category_repo.GetCategoryList(context)

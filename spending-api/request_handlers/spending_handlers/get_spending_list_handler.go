@@ -18,6 +18,8 @@ func GetSpendingListHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Info().Msg("Fetching spending list...")
 	records := spending_repo.GetSpendingList(context)
+	spending_repo.LoadSpendingListCategory(context, records)
+
 	response := mappers.MapSpendingList(records)
 
 	err := json.NewEncoder(w).Encode(response)

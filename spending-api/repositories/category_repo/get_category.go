@@ -7,6 +7,7 @@ import (
 	"spending/data_access"
 	"spending/models"
 	"spending/utils"
+	"strings"
 
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel"
@@ -25,6 +26,10 @@ func GetCategoryById(context context.Context, id int) *models.Category {
 	rows, err := db.Query(query)
 	utils.TraceError(span, err)
 	defer rows.Close()
+
+	if !rows.Next() {
+		return nil
+	}
 
 	category := readCategory(rows)
 
@@ -45,6 +50,10 @@ func GetCategoryByUUId(context context.Context, uuid uuid.UUID) *models.Category
 	utils.TraceError(span, err)
 	defer rows.Close()
 
+	if !rows.Next() {
+		return nil
+	}
+
 	category := readCategory(rows)
 
 	return category
@@ -63,6 +72,42 @@ func GetCategoryList(context context.Context) []*models.Category {
 	utils.TraceError(span, err)
 	defer rows.Close()
 
+	var categories []*models.Category = make([]*models.Category, 0)
+
+	for rows.Next() {
+		category := readCategory(rows)
+		if category != nil {
+			categories = append(categories, category)
+		}
+	}
+
+	return categories
+}
+
+func GetCategoryListByIds(context context.Context, ids []int) []*models.Category {
+	tracer := otel.Tracer("spending-api")
+	_, span := tracer.Start(context, "DB:GetCategoryListByIds")
+	defer span.End()
+
+	if len(ids) == 0 {
+		return []*models.Category{}
+	}
+
+	db := data_access.OpenDatabase()
+
+	var query string = `SELECT * FROM categories WHERE id IN (%s)`
+
+	var idList []string
+	for _, id := range ids {
+		idList = append(idList, fmt.Sprintf("%d", id))
+	}
+
+	query = fmt.Sprintf(query, strings.Join(idList, ","))
+
+	rows, err := db.Query(query)
+	utils.TraceError(span, err)
+	defer rows.Close()
+
 	var categories []*models.Category
 
 	for rows.Next() {
@@ -76,10 +121,6 @@ func GetCategoryList(context context.Context) []*models.Category {
 }
 
 func readCategory(rows *sql.Rows) *models.Category {
-	if !rows.Next() {
-		return nil
-	}
-
 	var category models.Category
 
 	err := rows.Scan(

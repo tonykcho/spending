@@ -21,7 +21,7 @@ func InsertSpendingRecord(context context.Context, record models.SpendingRecord)
 				amount,
 				remark,
 				spending_date,
-				category,
+				category_id,
 				created_at,
 				updated_at
 			) VALUES ($1, $2, $3, $4, $5, $6)
@@ -32,7 +32,7 @@ func InsertSpendingRecord(context context.Context, record models.SpendingRecord)
 		record.Amount,
 		record.Remark,
 		record.SpendingDate,
-		record.Category,
+		record.CategoryId,
 		record.CreatedAt,
 		record.UpdatedAt,
 	).Scan(&id)

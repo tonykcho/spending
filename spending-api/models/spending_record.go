@@ -12,7 +12,8 @@ type SpendingRecord struct {
 	Amount       float32
 	Remark       string
 	SpendingDate time.Time
-	Category     string
+	CategoryId   int
+	Category     *Category
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }
