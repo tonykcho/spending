@@ -29,7 +29,7 @@ services:
     ports:
       - 9090:9090 # expose prometheus on port 9090 for local access for development
     volumes:
-      - ./prometheus.development.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus.dev.yml:/etc/prometheus/prometheus.yml
     # labels:
     #   - "traefik.enable=true"
     #   - "traefik.http.routers.prometheus.rule=PathPrefix(`/`)"
@@ -37,6 +37,37 @@ services:
     #   - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
       # - "traefik.http.routers.prometheus.rule=Host(`traefik.prometheus.localhost`)"
 
+  loki:
+    image: grafana/loki
+    container_name: loki_container
+    ports:
+      - 3100:3100
+    command: -config.file=/etc/loki/local-config.yaml
+
+  promtail:
+    image: grafana/promtail
+    command: -config.file=/etc/promtail/docker-config.yaml
+    volumes:
+      - ./spending-api/logs:/logs
+      - ./promtail.dev.yaml:/etc/promtail/docker-config.yaml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on: [loki]
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana_container
+    ports:
+      - 3000:3000
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    # labels:
+    #   - "traefik.enable=true"
+    #   - "traefik.http.routers.grafana.rule=PathPrefix(`/`)"
+    #   - "traefik.http.routers.grafana.entrypoints=grafana" # Use the grafana entrypoint
+    #   - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+      # - "traefik.http.routers.grafana.rule=Host(`traefik.grafana.localhost`)"
 
 volumes:
   postgres_data:
