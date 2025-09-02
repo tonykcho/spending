@@ -23,7 +23,7 @@ func GetSpendingById(context context.Context, id int) *models.SpendingRecord {
 	var query = fmt.Sprintf(queryTemplate, id)
 
 	rows, err := db.Query(query)
-	utils.CheckError(err)
+	utils.TraceError(span, err)
 	defer rows.Close()
 
 	record := readSpendingRecord(rows)
@@ -31,17 +31,17 @@ func GetSpendingById(context context.Context, id int) *models.SpendingRecord {
 	return record
 }
 
-func GetSpendingByUUId(context context.Context, uid uuid.UUID) *models.SpendingRecord {
+func GetSpendingByUUId(context context.Context, uuid uuid.UUID) *models.SpendingRecord {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "GetSpendingByUUId")
 	defer span.End()
 	db := data_access.OpenDatabase()
 
 	var queryTemplate string = "SELECT * FROM spending_records WHERE uuid = '%s'"
-	var query string = fmt.Sprintf(queryTemplate, uid.String())
+	var query string = fmt.Sprintf(queryTemplate, uuid.String())
 
 	rows, err := db.Query(query)
-	utils.CheckError(err)
+	utils.TraceError(span, err)
 	defer rows.Close()
 
 	record := readSpendingRecord(rows)
@@ -58,7 +58,7 @@ func GetSpendingList(context context.Context) []*models.SpendingRecord {
 	var query string = "SELECT * FROM spending_records ORDER BY spending_date DESC"
 
 	rows, err := db.Query(query)
-	utils.CheckError(err)
+	utils.TraceError(span, err)
 	defer rows.Close()
 
 	var records []*models.SpendingRecord

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"spending/data_access"
+	"spending/request_handlers/category_handlers"
 	"spending/request_handlers/spending_handlers"
 	"spending/utils"
 	"time"
@@ -57,8 +58,12 @@ func configureDatabase() {
 }
 
 func configureEndpoints(router *mux.Router) {
-	log.Info().Msg("Adding spending endpoints")
-	spending_handlers.RegisterSpendingHandlers(router)
+	router.HandleFunc("/spending", spending_handlers.GetSpendingListHandler).Methods("GET")
+	router.HandleFunc("/spending/{id}", spending_handlers.GetSpendingRequestHandler).Methods("GET")
+	router.HandleFunc("/spending", spending_handlers.CreateSpendingRequestHandler).Methods("POST")
+
+	router.HandleFunc("/categories", category_handlers.CreateCategoryRequestHandler).Methods("POST")
+
 	router.HandleFunc("/metrics", promhttp.Handler().ServeHTTP)
 }
 

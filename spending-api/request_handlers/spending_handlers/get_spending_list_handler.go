@@ -21,5 +21,5 @@ func GetSpendingListHandler(w http.ResponseWriter, r *http.Request) {
 	response := mappers.MapSpendingList(records)
 
 	err := json.NewEncoder(w).Encode(response)
-	utils.CheckError(err)
+	utils.TraceError(span, err)
 }

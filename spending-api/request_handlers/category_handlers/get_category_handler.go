@@ -1,10 +1,10 @@
-package spending_handlers
+package category_handlers
 
 import (
 	"encoding/json"
 	"net/http"
 	"spending/mappers"
-	"spending/repositories/spending_repo"
+	"spending/repositories/category_repo"
 	"spending/utils"
 
 	"github.com/google/uuid"
@@ -12,24 +12,24 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func GetSpendingRequestHandler(writer http.ResponseWriter, request *http.Request) {
+func GetCategoryRequestHandler(writer http.ResponseWriter, request *http.Request) {
 	tracer := otel.Tracer("spending-api")
-	context, span := tracer.Start(request.Context(), "DB:GetSpendingByUUId")
+	context, span := tracer.Start(request.Context(), "GetCategoryRequestHandler")
 	defer span.End()
 
 	routerVars := mux.Vars(request)
 
-	spendingUUId, err := uuid.Parse(routerVars["id"])
+	categoryUUId, err := uuid.Parse(routerVars["id"])
 	utils.TraceError(span, err)
 
-	spending := spending_repo.GetSpendingByUUId(context, spendingUUId)
+	category := category_repo.GetCategoryByUUId(context, categoryUUId)
 
-	if spending == nil {
+	if category == nil {
 		http.Error(writer, "Record not found", http.StatusNotFound)
 		return
 	}
 
-	response := mappers.MapSpending(*spending)
+	response := mappers.MapCategory(*category)
 
 	err = json.NewEncoder(writer).Encode(response)
 	utils.TraceError(span, err)

@@ -31,6 +31,7 @@ func CreateSpendingRequestHandler(writer http.ResponseWriter, request *http.Requ
 	err := json.NewDecoder(request.Body).Decode(&command)
 
 	if err != nil {
+		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -38,12 +39,13 @@ func CreateSpendingRequestHandler(writer http.ResponseWriter, request *http.Requ
 	// Validate the request
 	validationErrors := validateRequest(command)
 	if validationErrors != nil {
+		utils.TraceError(span, validationErrors)
 		http.Error(writer, validationErrors.Error(), http.StatusBadRequest)
 		return
 	}
 
 	// Create a SpendingRecord from the request
-	record := models.SpendingRecord{
+	spending := models.SpendingRecord{
 		Amount:       command.Amount,
 		Remark:       command.Remark,
 		SpendingDate: command.SpendingDate,
@@ -53,15 +55,15 @@ func CreateSpendingRequestHandler(writer http.ResponseWriter, request *http.Requ
 	}
 
 	// Insert the record into the database
-	id := spending_repo.InsertSpendingRecord(record)
+	id := spending_repo.InsertSpendingRecord(context, spending)
 
-	spending := spending_repo.GetSpendingById(context, id)
-	response := mappers.MapSpending(*spending)
+	spending = *spending_repo.GetSpendingById(context, id)
+	response := mappers.MapSpending(spending)
 
 	// Return 201 created response
 	writer.WriteHeader(http.StatusCreated)
 	err = json.NewEncoder(writer).Encode(response)
-	utils.CheckError(err)
+	utils.TraceError(span, err)
 }
 
 func validateRequest(request CreateSpendingRequest) error {
