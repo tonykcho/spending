@@ -33,7 +33,7 @@ type CreateCategoryRequest struct {
 
 func (handler *createCategoryHandler) Handle(writer http.ResponseWriter, request *http.Request) {
 	tracer := otel.Tracer("spending-api")
-	context, span := tracer.Start(request.Context(), "CreateCategoryRequestHandler")
+	context, span := tracer.Start(request.Context(), "CreateCategoryHandler")
 	defer span.End()
 
 	// Parse the request body into CreateCategoryRequest struct

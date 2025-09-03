@@ -27,7 +27,7 @@ func NewDeleteCategoryHandler(categoryRepo category_repo.CategoryRepository) Del
 
 func (handler *deleteCategoryHandler) Handle(writer http.ResponseWriter, request *http.Request) {
 	tracer := otel.Tracer("spending-api")
-	context, span := tracer.Start(request.Context(), "DeleteCategoryRequestHandler")
+	context, span := tracer.Start(request.Context(), "DeleteCategoryHandler")
 	defer span.End()
 
 	routerVars := mux.Vars(request)

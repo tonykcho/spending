@@ -33,7 +33,7 @@ type UpdateCategoryRequest struct {
 
 func (handler *updateCategoryHandler) Handle(writer http.ResponseWriter, request *http.Request) {
 	tracer := otel.Tracer("spending-api")
-	context, span := tracer.Start(request.Context(), "CreateCategoryRequestHandler")
+	context, span := tracer.Start(request.Context(), "UpdateCategoryHandler")
 	defer span.End()
 
 	routerVars := mux.Vars(request)

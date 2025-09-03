@@ -41,7 +41,7 @@ type CreateSpendingRequest struct {
 func (handler *createSpendingHandler) Handle(writer http.ResponseWriter, request *http.Request) {
 	// Trace the request
 	tracer := otel.Tracer("spending-api")
-	context, span := tracer.Start(request.Context(), "CreateSpendingRequestHandler")
+	context, span := tracer.Start(request.Context(), "CreateSpendingHandler")
 	defer span.End()
 
 	// Parse the request body into CreateSpendingRequest struct

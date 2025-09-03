@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestCreateSpendingRequestHandler(t *testing.T) {
+func TestCreateSpendingHandler(t *testing.T) {
 	// Prepare a valid JSON request body
 	body := []byte(`{
         "amount": 100,
@@ -20,7 +20,7 @@ func TestCreateSpendingRequestHandler(t *testing.T) {
 	request.Header.Set("Content-Type", "application/json")
 	recorder := httptest.NewRecorder()
 
-	// spending_handlers.CreateSpendingRequestHandler(recorder, request)
+	// spending_handlers.CreateSpendingHandler(recorder, request)
 
 	// if recorder.Code != http.StatusCreated {
 	// 	t.Errorf("expected status 201 Created, got %d", recorder.Code)
