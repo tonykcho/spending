@@ -13,11 +13,25 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
+type CreateCategoryHandler interface {
+	Handle(writer http.ResponseWriter, request *http.Request)
+}
+
+type createCategoryHandler struct {
+	category_repo category_repo.CategoryRepository
+}
+
+func NewCreateCategoryHandler(categoryRepo category_repo.CategoryRepository) CreateCategoryHandler {
+	return &createCategoryHandler{
+		category_repo: categoryRepo,
+	}
+}
+
 type CreateCategoryRequest struct {
 	Name string `json:"name"`
 }
 
-func CreateCategoryRequestHandler(writer http.ResponseWriter, request *http.Request) {
+func (handler *createCategoryHandler) Handle(writer http.ResponseWriter, request *http.Request) {
 	tracer := otel.Tracer("spending-api")
 	context, span := tracer.Start(request.Context(), "CreateCategoryRequestHandler")
 	defer span.End()
@@ -40,7 +54,7 @@ func CreateCategoryRequestHandler(writer http.ResponseWriter, request *http.Requ
 		return
 	}
 
-	existingCategory, err := category_repo.GetCategoryByName(context, command.Name)
+	existingCategory, err := handler.category_repo.GetCategoryByName(context, command.Name)
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
@@ -59,14 +73,14 @@ func CreateCategoryRequestHandler(writer http.ResponseWriter, request *http.Requ
 		UpdatedAt: time.Now(),
 	}
 
-	id, err := category_repo.InsertCategory(context, newCategory)
+	id, err := handler.category_repo.InsertCategory(context, newCategory)
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	category, err := category_repo.GetCategoryById(context, id)
+	category, err := handler.category_repo.GetCategoryById(context, id)
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)

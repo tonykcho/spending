@@ -11,7 +11,21 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func DeleteCategoryRequestHandler(writer http.ResponseWriter, request *http.Request) {
+type DeleteCategoryHandler interface {
+	Handle(writer http.ResponseWriter, request *http.Request)
+}
+
+type deleteCategoryHandler struct {
+	category_repo category_repo.CategoryRepository
+}
+
+func NewDeleteCategoryHandler(categoryRepo category_repo.CategoryRepository) DeleteCategoryHandler {
+	return &deleteCategoryHandler{
+		category_repo: categoryRepo,
+	}
+}
+
+func (handler *deleteCategoryHandler) Handle(writer http.ResponseWriter, request *http.Request) {
 	tracer := otel.Tracer("spending-api")
 	context, span := tracer.Start(request.Context(), "DeleteCategoryRequestHandler")
 	defer span.End()
@@ -20,7 +34,7 @@ func DeleteCategoryRequestHandler(writer http.ResponseWriter, request *http.Requ
 	categoryUUId, err := uuid.Parse(routerVars["id"])
 	utils.TraceError(span, err)
 
-	category_repo.DeleteCategory(context, categoryUUId)
+	handler.category_repo.DeleteCategory(context, categoryUUId)
 
 	if err != nil {
 		utils.TraceError(span, fmt.Errorf("failed to delete category: %w", err))

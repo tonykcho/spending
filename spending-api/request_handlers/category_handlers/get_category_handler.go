@@ -12,7 +12,21 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func GetCategoryHandler(writer http.ResponseWriter, request *http.Request) {
+type GetCategoryHandler interface {
+	Handle(writer http.ResponseWriter, request *http.Request)
+}
+
+type getCategoryHandler struct {
+	category_repo category_repo.CategoryRepository
+}
+
+func NewGetCategoryHandler(categoryRepo category_repo.CategoryRepository) GetCategoryHandler {
+	return &getCategoryHandler{
+		category_repo: categoryRepo,
+	}
+}
+
+func (handler *getCategoryHandler) Handle(writer http.ResponseWriter, request *http.Request) {
 	tracer := otel.Tracer("spending-api")
 	context, span := tracer.Start(request.Context(), "GetCategoryHandler")
 	defer span.End()
@@ -22,7 +36,7 @@ func GetCategoryHandler(writer http.ResponseWriter, request *http.Request) {
 	categoryUUId, err := uuid.Parse(routerVars["id"])
 	utils.TraceError(span, err)
 
-	category, err := category_repo.GetCategoryByUUId(context, categoryUUId)
+	category, err := handler.category_repo.GetCategoryByUUId(context, categoryUUId)
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)

@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"net/http"
 	"os"
 	"spending/data_access"
+	"spending/repositories/category_repo"
+	"spending/repositories/spending_repo"
 	"spending/request_handlers/category_handlers"
 	"spending/request_handlers/spending_handlers"
 	"spending/utils"
@@ -24,19 +27,53 @@ import (
 	"github.com/rs/cors"
 )
 
+type Container struct {
+	CategoryRepository category_repo.CategoryRepository
+	SpendingRepository spending_repo.SpendingRepository
+
+	CreateCategoryHandler  category_handlers.CreateCategoryHandler
+	DeleteCategoryHandler  category_handlers.DeleteCategoryHandler
+	GetCategoryHandler     category_handlers.GetCategoryHandler
+	GetCategoryListHandler category_handlers.GetCategoryListHandler
+	UpdateCategoryHandler  category_handlers.UpdateCategoryHandler
+
+	CreateSpendingHandler  spending_handlers.CreateSpendingHandler
+	GetSpendingHandler     spending_handlers.GetSpendingHandler
+	GetSpendingListHandler spending_handlers.GetSpendingListHandler
+}
+
+func NewContainer(db *sql.DB) *Container {
+	return &Container{
+		CategoryRepository:     category_repo.NewCategoryRepository(db),
+		SpendingRepository:     spending_repo.NewSpendingRepository(db),
+		CreateCategoryHandler:  category_handlers.NewCreateCategoryHandler(category_repo.NewCategoryRepository(db)),
+		DeleteCategoryHandler:  category_handlers.NewDeleteCategoryHandler(category_repo.NewCategoryRepository(db)),
+		GetCategoryHandler:     category_handlers.NewGetCategoryHandler(category_repo.NewCategoryRepository(db)),
+		GetCategoryListHandler: category_handlers.NewGetCategoryListHandler(category_repo.NewCategoryRepository(db)),
+		UpdateCategoryHandler:  category_handlers.NewUpdateCategoryHandler(category_repo.NewCategoryRepository(db)),
+
+		CreateSpendingHandler:  spending_handlers.NewCreateSpendingHandler(spending_repo.NewSpendingRepository(db), category_repo.NewCategoryRepository(db)),
+		GetSpendingHandler:     spending_handlers.NewGetSpendingHandler(spending_repo.NewSpendingRepository(db)),
+		GetSpendingListHandler: spending_handlers.NewGetSpendingListHandler(spending_repo.NewSpendingRepository(db)),
+	}
+}
+
 func main() {
 	router := mux.NewRouter()
 
 	configureLogging()
 	configureDatabase()
-	configureEndpoints(router)
+
+	db := data_access.OpenDatabase()
+	defer db.Close()
+
+	configureEndpoints(router, db)
 	configureOpenTelemetry()
 
 	handler := cors.AllowAll().Handler(router)
 
 	log.Info().Msg("Server is listening on port 8001")
 	http.ListenAndServe(":8001", handler)
-	data_access.CloseDatabase() // Ensure the database connection is closed when the server stops
 }
 
 func configureLogging() {
@@ -61,16 +98,18 @@ func configureDatabase() {
 	data_access.MigrateDatabase()
 }
 
-func configureEndpoints(router *mux.Router) {
-	router.HandleFunc("/spending/{id}", spending_handlers.GetSpendingRequestHandler).Methods("GET")
-	router.HandleFunc("/spending", spending_handlers.GetSpendingListHandler).Methods("GET")
-	router.HandleFunc("/spending", spending_handlers.CreateSpendingRequestHandler).Methods("POST")
+func configureEndpoints(router *mux.Router, db *sql.DB) {
+	container := NewContainer(db)
 
-	router.HandleFunc("/categories/{id}", category_handlers.GetCategoryHandler).Methods("GET")
-	router.HandleFunc("/categories", category_handlers.GetCategoryListHandler).Methods("GET")
-	router.HandleFunc("/categories", category_handlers.CreateCategoryRequestHandler).Methods("POST")
-	router.HandleFunc("/categories/{id}", category_handlers.UpdateCategoryRequestHandler).Methods("PUT")
-	router.HandleFunc("/categories/{id}", category_handlers.DeleteCategoryRequestHandler).Methods("DELETE")
+	router.HandleFunc("/spending/{id}", container.GetSpendingHandler.Handle).Methods("GET")
+	router.HandleFunc("/spending", container.GetSpendingListHandler.Handle).Methods("GET")
+	router.HandleFunc("/spending", container.CreateSpendingHandler.Handle).Methods("POST")
+
+	router.HandleFunc("/categories/{id}", container.GetCategoryHandler.Handle).Methods("GET")
+	router.HandleFunc("/categories", container.GetCategoryListHandler.Handle).Methods("GET")
+	router.HandleFunc("/categories", container.CreateCategoryHandler.Handle).Methods("POST")
+	router.HandleFunc("/categories/{id}", container.UpdateCategoryHandler.Handle).Methods("PUT")
+	router.HandleFunc("/categories/{id}", container.DeleteCategoryHandler.Handle).Methods("DELETE")
 
 	router.HandleFunc("/metrics", promhttp.Handler().ServeHTTP)
 }

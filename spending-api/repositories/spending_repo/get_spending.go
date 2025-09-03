@@ -3,23 +3,19 @@ package spending_repo
 import (
 	"context"
 	"database/sql"
-	"spending/data_access"
 	"spending/models"
-	"spending/repositories/category_repo"
 	"spending/utils"
 
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel"
 )
 
-func GetSpendingById(context context.Context, id int) (*models.SpendingRecord, error) {
+func (repo *spendingRepository) GetSpendingById(context context.Context, id int) (*models.SpendingRecord, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetSpendingById")
 	defer span.End()
 
-	db := data_access.OpenDatabase()
-
-	rows, err := db.Query(`SELECT
+	rows, err := repo.db.Query(`SELECT
 							id,
 							uuid,
 							amount,
@@ -43,11 +39,10 @@ func GetSpendingById(context context.Context, id int) (*models.SpendingRecord, e
 	return record, nil
 }
 
-func GetSpendingByUUId(context context.Context, uuid uuid.UUID) (*models.SpendingRecord, error) {
+func (repo *spendingRepository) GetSpendingByUUId(context context.Context, uuid uuid.UUID) (*models.SpendingRecord, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "GetSpendingByUUId")
 	defer span.End()
-	db := data_access.OpenDatabase()
 
 	var query string = `SELECT
 							id,
@@ -62,7 +57,7 @@ func GetSpendingByUUId(context context.Context, uuid uuid.UUID) (*models.Spendin
 						WHERE uuid = $1
 						AND is_deleted = FALSE`
 
-	rows, err := db.Query(query, uuid.String())
+	rows, err := repo.db.Query(query, uuid.String())
 	utils.TraceError(span, err)
 	defer rows.Close()
 
@@ -75,11 +70,10 @@ func GetSpendingByUUId(context context.Context, uuid uuid.UUID) (*models.Spendin
 	return record, nil
 }
 
-func GetSpendingList(context context.Context) ([]*models.SpendingRecord, error) {
+func (repo *spendingRepository) GetSpendingList(context context.Context) ([]*models.SpendingRecord, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetSpendingList")
 	defer span.End()
-	db := data_access.OpenDatabase()
 
 	var query string = `SELECT 
 							id,
@@ -94,7 +88,7 @@ func GetSpendingList(context context.Context) ([]*models.SpendingRecord, error) 
 						WHERE is_deleted = FALSE
 						ORDER BY spending_date DESC`
 
-	rows, err := db.Query(query)
+	rows, err := repo.db.Query(query)
 	utils.TraceError(span, err)
 	defer rows.Close()
 
@@ -110,12 +104,12 @@ func GetSpendingList(context context.Context) ([]*models.SpendingRecord, error) 
 	return records, err
 }
 
-func LoadSpendingCategory(context context.Context, record *models.SpendingRecord) error {
+func (repo *spendingRepository) LoadSpendingCategory(context context.Context, record *models.SpendingRecord) error {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetSpendingList")
 	defer span.End()
 
-	category, err := category_repo.GetCategoryById(context, record.CategoryId)
+	category, err := repo.category_repo.GetCategoryById(context, record.CategoryId)
 	if err != nil {
 		utils.TraceError(span, err)
 		return err
@@ -125,7 +119,7 @@ func LoadSpendingCategory(context context.Context, record *models.SpendingRecord
 	return nil
 }
 
-func LoadSpendingListCategory(context context.Context, records []*models.SpendingRecord) error {
+func (repo *spendingRepository) LoadSpendingListCategory(context context.Context, records []*models.SpendingRecord) error {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetSpendingList")
 	defer span.End()
@@ -135,7 +129,7 @@ func LoadSpendingListCategory(context context.Context, records []*models.Spendin
 		categoryIds = append(categoryIds, record.CategoryId)
 	}
 
-	categories, err := category_repo.GetCategoryListByIds(context, categoryIds)
+	categories, err := repo.category_repo.GetCategoryListByIds(context, categoryIds)
 	if err != nil {
 		utils.TraceError(span, err)
 		return err

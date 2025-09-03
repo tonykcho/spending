@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"spending/data_access"
 	"spending/models"
 	"spending/utils"
 	"strings"
@@ -13,14 +12,12 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func GetCategoryById(context context.Context, id int) (*models.Category, error) {
+func (repo *categoryRepository) GetCategoryById(context context.Context, id int) (*models.Category, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetCategoryById")
 	defer span.End()
 
-	db := data_access.OpenDatabase()
-
-	rows, err := db.Query(`SELECT
+	rows, err := repo.db.Query(`SELECT
 							id,
 							uuid,
 							name,
@@ -42,14 +39,12 @@ func GetCategoryById(context context.Context, id int) (*models.Category, error) 
 	return category, err
 }
 
-func GetCategoryByUUId(context context.Context, uuid uuid.UUID) (*models.Category, error) {
+func (repo *categoryRepository) GetCategoryByUUId(context context.Context, uuid uuid.UUID) (*models.Category, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetCategoryByUUId")
 	defer span.End()
 
-	db := data_access.OpenDatabase()
-
-	rows, err := db.Query(`SELECT
+	rows, err := repo.db.Query(`SELECT
 							id,
 							uuid,
 							name,
@@ -71,14 +66,12 @@ func GetCategoryByUUId(context context.Context, uuid uuid.UUID) (*models.Categor
 	return category, err
 }
 
-func GetCategoryByName(context context.Context, name string) (*models.Category, error) {
+func (repo *categoryRepository) GetCategoryByName(context context.Context, name string) (*models.Category, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetCategoryByName")
 	defer span.End()
 
-	db := data_access.OpenDatabase()
-
-	rows, err := db.Query(`SELECT
+	rows, err := repo.db.Query(`SELECT
 							id,
 							uuid,
 							name,
@@ -100,12 +93,10 @@ func GetCategoryByName(context context.Context, name string) (*models.Category, 
 	return category, err
 }
 
-func GetCategoryList(context context.Context) ([]*models.Category, error) {
+func (repo *categoryRepository) GetCategoryList(context context.Context) ([]*models.Category, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetCategoryList")
 	defer span.End()
-
-	db := data_access.OpenDatabase()
 
 	var query string = `SELECT
 							id,
@@ -116,7 +107,7 @@ func GetCategoryList(context context.Context) ([]*models.Category, error) {
 						FROM categories
 						WHERE is_deleted = FALSE`
 
-	rows, err := db.Query(query)
+	rows, err := repo.db.Query(query)
 	utils.TraceError(span, err)
 	defer rows.Close()
 
@@ -132,7 +123,7 @@ func GetCategoryList(context context.Context) ([]*models.Category, error) {
 	return categories, err
 }
 
-func GetCategoryListByIds(context context.Context, ids []int) ([]*models.Category, error) {
+func (repo *categoryRepository) GetCategoryListByIds(context context.Context, ids []int) ([]*models.Category, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetCategoryListByIds")
 	defer span.End()
@@ -140,8 +131,6 @@ func GetCategoryListByIds(context context.Context, ids []int) ([]*models.Categor
 	if len(ids) == 0 {
 		return []*models.Category{}, nil
 	}
-
-	db := data_access.OpenDatabase()
 
 	placeholders := make([]string, len(ids))
 	args := make([]interface{}, len(ids))
@@ -158,7 +147,7 @@ func GetCategoryListByIds(context context.Context, ids []int) ([]*models.Categor
 						  FROM categories
 						  WHERE id IN (%s)
 						  AND is_deleted = FALSE`, strings.Join(placeholders, ","))
-	rows, err := db.Query(query, args...)
+	rows, err := repo.db.Query(query, args...)
 
 	utils.TraceError(span, err)
 	defer rows.Close()

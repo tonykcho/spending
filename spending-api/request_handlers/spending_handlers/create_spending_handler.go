@@ -15,6 +15,22 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
+type CreateSpendingHandler interface {
+	Handle(writer http.ResponseWriter, request *http.Request)
+}
+
+type createSpendingHandler struct {
+	spending_repo spending_repo.SpendingRepository
+	category_repo category_repo.CategoryRepository
+}
+
+func NewCreateSpendingHandler(spendingRepo spending_repo.SpendingRepository, categoryRepo category_repo.CategoryRepository) CreateSpendingHandler {
+	return &createSpendingHandler{
+		spending_repo: spendingRepo,
+		category_repo: categoryRepo,
+	}
+}
+
 type CreateSpendingRequest struct {
 	Amount       float32   `json:"amount"`
 	Remark       string    `json:"remark"`
@@ -22,7 +38,7 @@ type CreateSpendingRequest struct {
 	CategoryId   uuid.UUID `json:"category_id"`
 }
 
-func CreateSpendingRequestHandler(writer http.ResponseWriter, request *http.Request) {
+func (handler *createSpendingHandler) Handle(writer http.ResponseWriter, request *http.Request) {
 	// Trace the request
 	tracer := otel.Tracer("spending-api")
 	context, span := tracer.Start(request.Context(), "CreateSpendingRequestHandler")
@@ -46,7 +62,7 @@ func CreateSpendingRequestHandler(writer http.ResponseWriter, request *http.Requ
 		return
 	}
 
-	category, err := category_repo.GetCategoryByUUId(context, command.CategoryId)
+	category, err := handler.category_repo.GetCategoryByUUId(context, command.CategoryId)
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
@@ -70,9 +86,14 @@ func CreateSpendingRequestHandler(writer http.ResponseWriter, request *http.Requ
 	}
 
 	// Insert the record into the database
-	id := spending_repo.InsertSpendingRecord(context, newSpending)
+	id, err := handler.spending_repo.InsertSpendingRecord(context, newSpending)
+	if err != nil {
+		utils.TraceError(span, err)
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	spending, err := spending_repo.GetSpendingById(context, id)
+	spending, err := handler.spending_repo.GetSpendingById(context, id)
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
