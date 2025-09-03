@@ -1,0 +1,4 @@
+ALTER TABLE categories ADD COLUMN is_deleted BOOLEAN DEFAULT FALSE;
+ALTER TABLE categories ADD COLUMN deleted_at TIMESTAMPTZ;
+ALTER TABLE spending_records ADD COLUMN is_deleted BOOLEAN DEFAULT FALSE;
+ALTER TABLE spending_records ADD COLUMN deleted_at TIMESTAMPTZ;

@@ -20,6 +20,8 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
+
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -30,8 +32,10 @@ func main() {
 	configureEndpoints(router)
 	configureOpenTelemetry()
 
+	handler := cors.AllowAll().Handler(router)
+
 	log.Info().Msg("Server is listening on port 8001")
-	http.ListenAndServe(":8001", router)
+	http.ListenAndServe(":8001", handler)
 	data_access.CloseDatabase() // Ensure the database connection is closed when the server stops
 }
 

@@ -19,7 +19,16 @@ func GetSpendingById(context context.Context, id int) *models.SpendingRecord {
 
 	db := data_access.OpenDatabase()
 
-	rows, err := db.Query("SELECT * FROM spending_records WHERE id = $1", id)
+	rows, err := db.Query(`SELECT
+							id,
+							uuid,
+							amount,
+							remark,
+							spending_date,
+							category_id,
+							created_at,
+							updated_at
+						FROM spending_records WHERE id = $1`, id)
 	utils.TraceError(span, err)
 	defer rows.Close()
 
