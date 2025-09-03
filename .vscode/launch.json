@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch Package",
+            "name": "Spending API",
             "type": "go",
             "request": "launch",
             "mode": "auto",
@@ -14,6 +14,17 @@
             "env": {
                 "APP_ENV": "dev"
             },
+        },
+        {
+            "name": "Spending UI",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/spending-ui",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run",
+                "dev"
+            ],
         }
     ]
 }
