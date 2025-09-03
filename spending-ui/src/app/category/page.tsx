@@ -24,7 +24,7 @@ export default function CategoryPage() {
 
     async function OnCategoryDeleted(category: Category) {
         await deleteCategoryAsync(category.uuid);
-        fetchCategories();
+        await fetchCategories();
     }
 
     return (

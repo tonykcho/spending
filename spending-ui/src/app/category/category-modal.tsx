@@ -66,11 +66,10 @@ const CategoryModal = forwardRef<CategoryModalRef, CategoryModalProps>((props, r
         }
 
         var requestData: UpdateCategoryDto = {
-            UUId: formData.uuid,
             Name: formData.name
         }
 
-        await updateCategoryAsync(requestData)
+        await updateCategoryAsync(formData.uuid, requestData)
     }
 
     return (

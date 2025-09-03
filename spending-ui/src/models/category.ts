@@ -26,6 +26,5 @@ export interface CreateCategoryDto {
 }
 
 export interface UpdateCategoryDto {
-    UUId: string;
     Name: string;
 }

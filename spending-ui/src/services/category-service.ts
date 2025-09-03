@@ -24,8 +24,8 @@ export async function createCategoryAsync(requestData: CreateCategoryDto): Promi
     }
 }
 
-export async function updateCategoryAsync(requestData: UpdateCategoryDto): Promise<void> {
-    var response = await fetch(`http://localhost:8001/categories/${requestData.UUId}`, {
+export async function updateCategoryAsync(id: string, requestData: UpdateCategoryDto): Promise<void> {
+    var response = await fetch(`http://localhost:8001/categories/${id}`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
@@ -38,8 +38,8 @@ export async function updateCategoryAsync(requestData: UpdateCategoryDto): Promi
     }
 }
 
-export async function deleteCategoryAsync(uuid: string): Promise<void> {
-    var response = await fetch(`http://localhost:8001/categories/${uuid}`, {
+export async function deleteCategoryAsync(id: string): Promise<void> {
+    var response = await fetch(`http://localhost:8001/categories/${id}`, {
         method: "DELETE",
     });
 
