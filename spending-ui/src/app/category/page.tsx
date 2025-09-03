@@ -1,8 +1,9 @@
 'use client'
 
-import { Category, CategoryDto, mapCategoryFromDto } from "@/models/category";
+import { Category } from "@/models/category";
 import React, { useEffect } from "react"
 import CategoryModal, { CategoryModalRef } from "./category-modal";
+import { deleteCategoryAsync, getCategoryListAsync } from "@/services/category-service";
 
 export default function CategoryPage() {
     const [categories, setCategories] = React.useState<Category[]>([]);
@@ -13,17 +14,17 @@ export default function CategoryPage() {
     }, []);
 
     async function fetchCategories() {
-        const response = await fetch("http://localhost:8001/categories");
-        if (!response.ok) {
-            throw new Error("Failed to fetch categories");
-        }
-        const categoryDtos: CategoryDto[] = await response.json();
-        var categories = categoryDtos.map(mapCategoryFromDto);
+        const categories = await getCategoryListAsync();
         setCategories(categories);
     }
 
     function OnCategoryEdit(category: Category) {
         modalRef.current?.open(category);
+    }
+
+    async function OnCategoryDeleted(category: Category) {
+        await deleteCategoryAsync(category.uuid);
+        fetchCategories();
     }
 
     return (
@@ -35,10 +36,9 @@ export default function CategoryPage() {
                             <h1 className="self-center text-2xl font-semibold">{category.name}</h1>
 
                             <div className="flex flex-row mt-5 justify-between">
-                                <button className="btn btn-danger">Delete</button>
+                                <button className="btn btn-danger" onClick={() => OnCategoryDeleted(category)}>Delete</button>
                                 <button className="btn btn-primary" onClick={() => OnCategoryEdit(category)}>Edit</button>
                             </div>
-                            {/* <button className="mt-2 p-1 bg-blue-500 text-white rounded hover:bg-blue-600">View Details</button> */}
                         </div>
                     </div>
                 ))}

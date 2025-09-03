@@ -19,6 +19,5 @@ func TraceError(span trace.Span, err error) {
 		log.Error().Msg(err.Error())
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		panic(err)
 	}
 }

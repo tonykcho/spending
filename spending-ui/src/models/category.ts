@@ -24,3 +24,8 @@ export function mapCategoryFromDto(dto: CategoryDto): Category {
 export interface CreateCategoryDto {
     Name: string;
 }
+
+export interface UpdateCategoryDto {
+    UUId: string;
+    Name: string;
+}

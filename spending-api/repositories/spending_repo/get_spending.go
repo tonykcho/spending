@@ -28,7 +28,9 @@ func GetSpendingById(context context.Context, id int) *models.SpendingRecord {
 							category_id,
 							created_at,
 							updated_at
-						FROM spending_records WHERE id = $1`, id)
+						FROM spending_records
+						WHERE id = $1
+						AND is_deleted = FALSE`, id)
 	utils.TraceError(span, err)
 	defer rows.Close()
 
@@ -56,7 +58,9 @@ func GetSpendingByUUId(context context.Context, uuid uuid.UUID) *models.Spending
 							category_id,
 							created_at,
 							updated_at
-						FROM spending_records WHERE uuid = $1`
+						FROM spending_records
+						WHERE uuid = $1
+						AND is_deleted = FALSE`
 
 	rows, err := db.Query(query, uuid.String())
 	utils.TraceError(span, err)
@@ -87,6 +91,7 @@ func GetSpendingList(context context.Context) []*models.SpendingRecord {
 							created_at,
 							updated_at
 						FROM spending_records
+						WHERE is_deleted = FALSE
 						ORDER BY spending_date DESC`
 
 	rows, err := db.Query(query)

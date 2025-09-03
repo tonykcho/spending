@@ -1,7 +1,8 @@
 'use client'
 
-import { Category, CreateCategoryDto } from "@/models/category";
+import { Category, CreateCategoryDto, UpdateCategoryDto } from "@/models/category";
 import React, { forwardRef, useImperativeHandle } from "react";
+import { createCategoryAsync, updateCategoryAsync } from "@/services/category-service";
 
 interface CategoryFormData {
     uuid: string | null;
@@ -41,9 +42,8 @@ const CategoryModal = forwardRef<CategoryModalRef, CategoryModalProps>((props, r
         }
 
         if (formData.uuid != null) {
-            // Update existing category
+            await updateCategory();
         } else {
-            // Create new category
             await createCategory();
         }
 
@@ -57,17 +57,20 @@ const CategoryModal = forwardRef<CategoryModalRef, CategoryModalProps>((props, r
             Name: formData.name
         }
 
-        var response = await fetch("http://localhost:8001/categories", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(requestData),
-        });
+        await createCategoryAsync(requestData);
+    }
 
-        if (!response.ok) {
-            throw new Error("Failed to create category");
+    async function updateCategory() {
+        if (!formData.uuid) {
+            throw new Error("Category UUID is required for update.");
         }
+
+        var requestData: UpdateCategoryDto = {
+            UUId: formData.uuid,
+            Name: formData.name
+        }
+
+        await updateCategoryAsync(requestData)
     }
 
     return (

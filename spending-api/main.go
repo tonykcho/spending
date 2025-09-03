@@ -69,6 +69,8 @@ func configureEndpoints(router *mux.Router) {
 	router.HandleFunc("/categories/{id}", category_handlers.GetCategoryHandler).Methods("GET")
 	router.HandleFunc("/categories", category_handlers.GetCategoryListHandler).Methods("GET")
 	router.HandleFunc("/categories", category_handlers.CreateCategoryRequestHandler).Methods("POST")
+	router.HandleFunc("/categories/{id}", category_handlers.UpdateCategoryRequestHandler).Methods("PUT")
+	router.HandleFunc("/categories/{id}", category_handlers.DeleteCategoryRequestHandler).Methods("DELETE")
 
 	router.HandleFunc("/metrics", promhttp.Handler().ServeHTTP)
 }

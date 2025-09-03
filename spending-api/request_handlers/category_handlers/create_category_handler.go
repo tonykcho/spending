@@ -33,10 +33,17 @@ func CreateCategoryRequestHandler(writer http.ResponseWriter, request *http.Requ
 	}
 
 	// Validate the request
-	validationErrors := validateRequest(command)
+	validationErrors := validateCreateCategoryRequest(command)
 	if validationErrors != nil {
 		utils.TraceError(span, validationErrors)
 		http.Error(writer, validationErrors.Error(), http.StatusBadRequest)
+		return
+	}
+
+	existingCategory := category_repo.GetCategoryByName(context, command.Name)
+	if existingCategory != nil {
+		utils.TraceError(span, fmt.Errorf("category already exists"))
+		http.Error(writer, "Category already exists", http.StatusConflict)
 		return
 	}
 
@@ -56,7 +63,7 @@ func CreateCategoryRequestHandler(writer http.ResponseWriter, request *http.Requ
 	utils.TraceError(span, err)
 }
 
-func validateRequest(request CreateCategoryRequest) error {
+func validateCreateCategoryRequest(request CreateCategoryRequest) error {
 	if request.Name == "" {
 		return fmt.Errorf("name cannot be empty")
 	}

@@ -26,7 +26,9 @@ func GetCategoryById(context context.Context, id int) *models.Category {
 							name,
 							created_at,
 							updated_at
-						FROM categories WHERE id = $1`, id)
+						FROM categories
+						WHERE id = $1
+						AND is_deleted = FALSE`, id)
 
 	utils.TraceError(span, err)
 	defer rows.Close()
@@ -53,7 +55,38 @@ func GetCategoryByUUId(context context.Context, uuid uuid.UUID) *models.Category
 							name,
 							created_at,
 							updated_at
-						FROM categories WHERE uuid = $1`, uuid)
+						FROM categories
+						WHERE uuid = $1
+						AND is_deleted = FALSE`, uuid)
+
+	utils.TraceError(span, err)
+	defer rows.Close()
+
+	if !rows.Next() {
+		return nil
+	}
+
+	category := readCategory(rows)
+
+	return category
+}
+
+func GetCategoryByName(context context.Context, name string) *models.Category {
+	tracer := otel.Tracer("spending-api")
+	_, span := tracer.Start(context, "DB:GetCategoryByName")
+	defer span.End()
+
+	db := data_access.OpenDatabase()
+
+	rows, err := db.Query(`SELECT
+							id,
+							uuid,
+							name,
+							created_at,
+							updated_at
+						FROM categories
+						WHERE name = $1
+						AND is_deleted = FALSE`, name)
 
 	utils.TraceError(span, err)
 	defer rows.Close()
@@ -80,7 +113,8 @@ func GetCategoryList(context context.Context) []*models.Category {
 							name,
 							created_at,
 							updated_at
-						FROM categories`
+						FROM categories
+						WHERE is_deleted = FALSE`
 
 	rows, err := db.Query(query)
 	utils.TraceError(span, err)
@@ -121,7 +155,9 @@ func GetCategoryListByIds(context context.Context, ids []int) []*models.Category
 							name,
 							created_at,
 							updated_at
-						  FROM categories WHERE id IN (%s)`, strings.Join(placeholders, ","))
+						  FROM categories
+						  WHERE id IN (%s)
+						  AND is_deleted = FALSE`, strings.Join(placeholders, ","))
 	rows, err := db.Query(query, args...)
 
 	utils.TraceError(span, err)
