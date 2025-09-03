@@ -9,7 +9,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func DeleteCategory(context context.Context, uuid uuid.UUID) {
+func DeleteCategory(context context.Context, uuid uuid.UUID) error {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:DeleteCategory")
 	defer span.End()
@@ -18,4 +18,5 @@ func DeleteCategory(context context.Context, uuid uuid.UUID) {
 
 	_, err := db.Exec(`UPDATE categories SET is_deleted = TRUE, deleted_at = NOW() WHERE uuid = $1`, uuid)
 	utils.TraceError(span, err)
+	return err
 }

@@ -22,14 +22,19 @@ func GetCategoryHandler(writer http.ResponseWriter, request *http.Request) {
 	categoryUUId, err := uuid.Parse(routerVars["id"])
 	utils.TraceError(span, err)
 
-	category := category_repo.GetCategoryByUUId(context, categoryUUId)
+	category, err := category_repo.GetCategoryByUUId(context, categoryUUId)
+	if err != nil {
+		utils.TraceError(span, err)
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	if category == nil {
 		http.Error(writer, "Record not found", http.StatusNotFound)
 		return
 	}
 
-	response := mappers.MapCategory(*category)
+	response := mappers.MapCategory(category)
 
 	err = json.NewEncoder(writer).Encode(response)
 	utils.TraceError(span, err)

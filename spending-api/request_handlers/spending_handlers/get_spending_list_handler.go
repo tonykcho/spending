@@ -17,11 +17,23 @@ func GetSpendingListHandler(w http.ResponseWriter, r *http.Request) {
 	defer span.End()
 
 	log.Info().Msg("Fetching spending list...")
-	records := spending_repo.GetSpendingList(context)
-	spending_repo.LoadSpendingListCategory(context, records)
+	records, err := spending_repo.GetSpendingList(context)
+
+	if err != nil {
+		utils.TraceError(span, err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = spending_repo.LoadSpendingListCategory(context, records)
+	if err != nil {
+		utils.TraceError(span, err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	response := mappers.MapSpendingList(records)
 
-	err := json.NewEncoder(w).Encode(response)
+	err = json.NewEncoder(w).Encode(response)
 	utils.TraceError(span, err)
 }

@@ -13,7 +13,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func GetCategoryById(context context.Context, id int) *models.Category {
+func GetCategoryById(context context.Context, id int) (*models.Category, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetCategoryById")
 	defer span.End()
@@ -34,15 +34,15 @@ func GetCategoryById(context context.Context, id int) *models.Category {
 	defer rows.Close()
 
 	if !rows.Next() {
-		return nil
+		return nil, err
 	}
 
 	category := readCategory(rows)
 
-	return category
+	return category, err
 }
 
-func GetCategoryByUUId(context context.Context, uuid uuid.UUID) *models.Category {
+func GetCategoryByUUId(context context.Context, uuid uuid.UUID) (*models.Category, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetCategoryByUUId")
 	defer span.End()
@@ -63,15 +63,15 @@ func GetCategoryByUUId(context context.Context, uuid uuid.UUID) *models.Category
 	defer rows.Close()
 
 	if !rows.Next() {
-		return nil
+		return nil, err
 	}
 
 	category := readCategory(rows)
 
-	return category
+	return category, err
 }
 
-func GetCategoryByName(context context.Context, name string) *models.Category {
+func GetCategoryByName(context context.Context, name string) (*models.Category, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetCategoryByName")
 	defer span.End()
@@ -92,15 +92,15 @@ func GetCategoryByName(context context.Context, name string) *models.Category {
 	defer rows.Close()
 
 	if !rows.Next() {
-		return nil
+		return nil, err
 	}
 
 	category := readCategory(rows)
 
-	return category
+	return category, err
 }
 
-func GetCategoryList(context context.Context) []*models.Category {
+func GetCategoryList(context context.Context) ([]*models.Category, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetCategoryList")
 	defer span.End()
@@ -129,16 +129,16 @@ func GetCategoryList(context context.Context) []*models.Category {
 		}
 	}
 
-	return categories
+	return categories, err
 }
 
-func GetCategoryListByIds(context context.Context, ids []int) []*models.Category {
+func GetCategoryListByIds(context context.Context, ids []int) ([]*models.Category, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetCategoryListByIds")
 	defer span.End()
 
 	if len(ids) == 0 {
-		return []*models.Category{}
+		return []*models.Category{}, nil
 	}
 
 	db := data_access.OpenDatabase()
@@ -172,7 +172,7 @@ func GetCategoryListByIds(context context.Context, ids []int) []*models.Category
 		}
 	}
 
-	return categories
+	return categories, err
 }
 
 func readCategory(rows *sql.Rows) *models.Category {

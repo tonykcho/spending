@@ -15,9 +15,15 @@ func GetCategoryListHandler(writer http.ResponseWriter, request *http.Request) {
 	context, span := tracer.Start(request.Context(), "GetCategoryListHandler")
 	defer span.End()
 
-	categories := category_repo.GetCategoryList(context)
+	categories, err := category_repo.GetCategoryList(context)
+	if err != nil {
+		utils.TraceError(span, err)
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	response := mappers.MapCategoryList(categories)
 
-	err := json.NewEncoder(writer).Encode(response)
+	err = json.NewEncoder(writer).Encode(response)
 	utils.TraceError(span, err)
 }

@@ -46,7 +46,13 @@ func CreateSpendingRequestHandler(writer http.ResponseWriter, request *http.Requ
 		return
 	}
 
-	category := category_repo.GetCategoryByUUId(context, command.CategoryId)
+	category, err := category_repo.GetCategoryByUUId(context, command.CategoryId)
+	if err != nil {
+		utils.TraceError(span, err)
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	if category == nil {
 		utils.TraceError(span, fmt.Errorf("category not found"))
 		http.Error(writer, "category not found", http.StatusBadRequest)
@@ -54,7 +60,7 @@ func CreateSpendingRequestHandler(writer http.ResponseWriter, request *http.Requ
 	}
 
 	// Create a SpendingRecord from the request
-	spending := models.SpendingRecord{
+	newSpending := models.SpendingRecord{
 		Amount:       command.Amount,
 		Remark:       command.Remark,
 		SpendingDate: command.SpendingDate,
@@ -64,9 +70,14 @@ func CreateSpendingRequestHandler(writer http.ResponseWriter, request *http.Requ
 	}
 
 	// Insert the record into the database
-	id := spending_repo.InsertSpendingRecord(context, spending)
+	id := spending_repo.InsertSpendingRecord(context, newSpending)
 
-	spending = *spending_repo.GetSpendingById(context, id)
+	spending, err := spending_repo.GetSpendingById(context, id)
+	if err != nil {
+		utils.TraceError(span, err)
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	response := mappers.MapSpending(spending)
 
 	// Return 201 created response

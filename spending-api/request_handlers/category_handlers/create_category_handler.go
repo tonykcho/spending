@@ -40,22 +40,39 @@ func CreateCategoryRequestHandler(writer http.ResponseWriter, request *http.Requ
 		return
 	}
 
-	existingCategory := category_repo.GetCategoryByName(context, command.Name)
+	existingCategory, err := category_repo.GetCategoryByName(context, command.Name)
+	if err != nil {
+		utils.TraceError(span, err)
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	if existingCategory != nil {
 		utils.TraceError(span, fmt.Errorf("category already exists"))
 		http.Error(writer, "Category already exists", http.StatusConflict)
 		return
 	}
 
-	category := models.Category{
+	newCategory := models.Category{
 		Name:      command.Name,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
 
-	id := category_repo.InsertCategory(context, category)
+	id, err := category_repo.InsertCategory(context, newCategory)
+	if err != nil {
+		utils.TraceError(span, err)
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-	category = *category_repo.GetCategoryById(context, id)
+	category, err := category_repo.GetCategoryById(context, id)
+	if err != nil {
+		utils.TraceError(span, err)
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	response := mappers.MapCategory(category)
 
 	writer.WriteHeader(http.StatusCreated)

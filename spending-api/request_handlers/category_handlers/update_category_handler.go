@@ -45,14 +45,26 @@ func UpdateCategoryRequestHandler(writer http.ResponseWriter, request *http.Requ
 		return
 	}
 
-	existingCategory := category_repo.GetCategoryByName(context, command.Name)
+	existingCategory, err := category_repo.GetCategoryByName(context, command.Name)
+	if err != nil {
+		utils.TraceError(span, err)
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	if existingCategory != nil && existingCategory.UUId != categoryUUId {
 		utils.TraceError(span, fmt.Errorf("category already exists"))
 		http.Error(writer, "Category already exists", http.StatusConflict)
 		return
 	}
 
-	category := category_repo.GetCategoryByUUId(context, categoryUUId)
+	category, err := category_repo.GetCategoryByUUId(context, categoryUUId)
+	if err != nil {
+		utils.TraceError(span, err)
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	if category == nil {
 		utils.TraceError(span, fmt.Errorf("category not found"))
 		http.Error(writer, "Category not found", http.StatusNotFound)

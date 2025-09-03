@@ -12,7 +12,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func GetSpendingById(context context.Context, id int) *models.SpendingRecord {
+func GetSpendingById(context context.Context, id int) (*models.SpendingRecord, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetSpendingById")
 	defer span.End()
@@ -35,15 +35,15 @@ func GetSpendingById(context context.Context, id int) *models.SpendingRecord {
 	defer rows.Close()
 
 	if !rows.Next() {
-		return nil
+		return nil, err
 	}
 
 	record := readSpendingRecord(rows)
 
-	return record
+	return record, nil
 }
 
-func GetSpendingByUUId(context context.Context, uuid uuid.UUID) *models.SpendingRecord {
+func GetSpendingByUUId(context context.Context, uuid uuid.UUID) (*models.SpendingRecord, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "GetSpendingByUUId")
 	defer span.End()
@@ -67,15 +67,15 @@ func GetSpendingByUUId(context context.Context, uuid uuid.UUID) *models.Spending
 	defer rows.Close()
 
 	if !rows.Next() {
-		return nil
+		return nil, err
 	}
 
 	record := readSpendingRecord(rows)
 
-	return record
+	return record, nil
 }
 
-func GetSpendingList(context context.Context) []*models.SpendingRecord {
+func GetSpendingList(context context.Context) ([]*models.SpendingRecord, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetSpendingList")
 	defer span.End()
@@ -107,21 +107,40 @@ func GetSpendingList(context context.Context) []*models.SpendingRecord {
 		}
 	}
 
-	return records
+	return records, err
 }
 
-func LoadSpendingCategory(context context.Context, record *models.SpendingRecord) {
-	category := category_repo.GetCategoryById(context, record.CategoryId)
+func LoadSpendingCategory(context context.Context, record *models.SpendingRecord) error {
+	tracer := otel.Tracer("spending-api")
+	_, span := tracer.Start(context, "DB:GetSpendingList")
+	defer span.End()
+
+	category, err := category_repo.GetCategoryById(context, record.CategoryId)
+	if err != nil {
+		utils.TraceError(span, err)
+		return err
+	}
+
 	record.Category = category
+	return nil
 }
 
-func LoadSpendingListCategory(context context.Context, records []*models.SpendingRecord) {
+func LoadSpendingListCategory(context context.Context, records []*models.SpendingRecord) error {
+	tracer := otel.Tracer("spending-api")
+	_, span := tracer.Start(context, "DB:GetSpendingList")
+	defer span.End()
+
 	categoryIds := make([]int, 0)
 	for _, record := range records {
 		categoryIds = append(categoryIds, record.CategoryId)
 	}
 
-	categories := category_repo.GetCategoryListByIds(context, categoryIds)
+	categories, err := category_repo.GetCategoryListByIds(context, categoryIds)
+	if err != nil {
+		utils.TraceError(span, err)
+		return err
+	}
+
 	categoryMap := make(map[int]*models.Category)
 	for _, category := range categories {
 		categoryMap[category.Id] = category
@@ -130,6 +149,8 @@ func LoadSpendingListCategory(context context.Context, records []*models.Spendin
 	for _, record := range records {
 		record.Category = categoryMap[record.CategoryId]
 	}
+
+	return nil
 }
 
 func readSpendingRecord(rows *sql.Rows) *models.SpendingRecord {

@@ -9,7 +9,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func InsertCategory(context context.Context, category models.Category) int {
+func InsertCategory(context context.Context, category models.Category) (int, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:InsertCategory")
 	defer span.End()
@@ -26,5 +26,5 @@ func InsertCategory(context context.Context, category models.Category) int {
 	var id int
 	err := db.QueryRow(query, category.Name, category.CreatedAt, category.UpdatedAt).Scan(&id)
 	utils.TraceError(span, err)
-	return id
+	return id, err
 }

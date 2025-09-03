@@ -5,8 +5,12 @@ import (
 	"spending/responses"
 )
 
-func MapCategory(category models.Category) responses.CategoryResponse {
-	response := responses.CategoryResponse{
+func MapCategory(category *models.Category) *responses.CategoryResponse {
+	if category == nil {
+		return nil
+	}
+
+	response := &responses.CategoryResponse{
 		UUId:      category.UUId,
 		Name:      category.Name,
 		CreatedAt: category.CreatedAt,
@@ -16,11 +20,11 @@ func MapCategory(category models.Category) responses.CategoryResponse {
 	return response
 }
 
-func MapCategoryList(categoryList []*models.Category) []responses.CategoryResponse {
-	var responseList []responses.CategoryResponse = make([]responses.CategoryResponse, 0)
+func MapCategoryList(categoryList []*models.Category) []*responses.CategoryResponse {
+	var responseList []*responses.CategoryResponse = make([]*responses.CategoryResponse, 0)
 
 	for _, category := range categoryList {
-		response := MapCategory(*category)
+		response := MapCategory(category)
 		responseList = append(responseList, response)
 	}
 	return responseList

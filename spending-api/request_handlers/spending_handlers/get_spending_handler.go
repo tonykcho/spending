@@ -22,16 +22,27 @@ func GetSpendingRequestHandler(writer http.ResponseWriter, request *http.Request
 	spendingUUId, err := uuid.Parse(routerVars["id"])
 	utils.TraceError(span, err)
 
-	spending := spending_repo.GetSpendingByUUId(context, spendingUUId)
+	spending, err := spending_repo.GetSpendingByUUId(context, spendingUUId)
+
+	if err != nil {
+		utils.TraceError(span, err)
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	if spending == nil {
 		http.Error(writer, "Record not found", http.StatusNotFound)
 		return
 	}
 
-	spending_repo.LoadSpendingCategory(context, spending)
+	err = spending_repo.LoadSpendingCategory(context, spending)
+	if err != nil {
+		utils.TraceError(span, err)
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	response := mappers.MapSpending(*spending)
+	response := mappers.MapSpending(spending)
 
 	err = json.NewEncoder(writer).Encode(response)
 	utils.TraceError(span, err)

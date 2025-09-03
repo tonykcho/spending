@@ -9,7 +9,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func UpdateCategory(context context.Context, category *models.Category) {
+func UpdateCategory(context context.Context, category *models.Category) error {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:UpdateCategory")
 	defer span.End()
@@ -22,4 +22,5 @@ func UpdateCategory(context context.Context, category *models.Category) {
 						WHERE id = $3`, category.Name, category.UpdatedAt, category.Id)
 
 	utils.TraceError(span, err)
+	return err
 }
