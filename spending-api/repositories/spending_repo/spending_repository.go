@@ -16,6 +16,7 @@ type SpendingRepository interface {
 	GetSpendingList(context context.Context) ([]*models.SpendingRecord, error)
 	LoadSpendingCategory(context context.Context, record *models.SpendingRecord) error
 	LoadSpendingListCategory(context context.Context, records []*models.SpendingRecord) error
+	DeleteSpending(context context.Context, uuid uuid.UUID) error
 }
 
 type spendingRepository struct {

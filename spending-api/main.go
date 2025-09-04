@@ -40,21 +40,26 @@ type Container struct {
 	CreateSpendingHandler  spending_handlers.CreateSpendingHandler
 	GetSpendingHandler     spending_handlers.GetSpendingHandler
 	GetSpendingListHandler spending_handlers.GetSpendingListHandler
+	DeleteSpendingHandler  spending_handlers.DeleteSpendingHandler
 }
 
 func NewContainer(db *sql.DB) *Container {
-	return &Container{
-		CategoryRepository:     category_repo.NewCategoryRepository(db),
-		SpendingRepository:     spending_repo.NewSpendingRepository(db),
-		CreateCategoryHandler:  category_handlers.NewCreateCategoryHandler(category_repo.NewCategoryRepository(db)),
-		DeleteCategoryHandler:  category_handlers.NewDeleteCategoryHandler(category_repo.NewCategoryRepository(db)),
-		GetCategoryHandler:     category_handlers.NewGetCategoryHandler(category_repo.NewCategoryRepository(db)),
-		GetCategoryListHandler: category_handlers.NewGetCategoryListHandler(category_repo.NewCategoryRepository(db)),
-		UpdateCategoryHandler:  category_handlers.NewUpdateCategoryHandler(category_repo.NewCategoryRepository(db)),
+	categoryRepo := category_repo.NewCategoryRepository(db)
+	spendingRepo := spending_repo.NewSpendingRepository(db)
 
-		CreateSpendingHandler:  spending_handlers.NewCreateSpendingHandler(spending_repo.NewSpendingRepository(db), category_repo.NewCategoryRepository(db)),
-		GetSpendingHandler:     spending_handlers.NewGetSpendingHandler(spending_repo.NewSpendingRepository(db)),
-		GetSpendingListHandler: spending_handlers.NewGetSpendingListHandler(spending_repo.NewSpendingRepository(db)),
+	return &Container{
+		CategoryRepository:     categoryRepo,
+		SpendingRepository:     spendingRepo,
+		CreateCategoryHandler:  category_handlers.NewCreateCategoryHandler(categoryRepo),
+		DeleteCategoryHandler:  category_handlers.NewDeleteCategoryHandler(categoryRepo),
+		GetCategoryHandler:     category_handlers.NewGetCategoryHandler(categoryRepo),
+		GetCategoryListHandler: category_handlers.NewGetCategoryListHandler(categoryRepo),
+		UpdateCategoryHandler:  category_handlers.NewUpdateCategoryHandler(categoryRepo),
+
+		CreateSpendingHandler:  spending_handlers.NewCreateSpendingHandler(spendingRepo, categoryRepo),
+		GetSpendingHandler:     spending_handlers.NewGetSpendingHandler(spendingRepo),
+		GetSpendingListHandler: spending_handlers.NewGetSpendingListHandler(spendingRepo),
+		DeleteSpendingHandler:  spending_handlers.NewDeleteSpendingHandler(spendingRepo),
 	}
 }
 

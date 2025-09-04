@@ -1,7 +1,6 @@
 package category_handlers
 
 import (
-	"fmt"
 	"net/http"
 	"spending/repositories/category_repo"
 	"spending/utils"
@@ -34,11 +33,17 @@ func (handler *deleteCategoryHandler) Handle(writer http.ResponseWriter, request
 	categoryUUId, err := uuid.Parse(routerVars["id"])
 	utils.TraceError(span, err)
 
-	handler.category_repo.DeleteCategory(context, categoryUUId)
+	if err != nil {
+		utils.TraceError(span, err)
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = handler.category_repo.DeleteCategory(context, categoryUUId)
 
 	if err != nil {
-		utils.TraceError(span, fmt.Errorf("failed to delete category: %w", err))
-		http.Error(writer, "Failed to delete category", http.StatusInternalServerError)
+		utils.TraceError(span, err)
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
