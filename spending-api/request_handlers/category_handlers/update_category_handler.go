@@ -1,7 +1,7 @@
 package category_handlers
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
 	"net/http"
 	"spending/repositories/category_repo"
@@ -44,18 +44,11 @@ func (handler *updateCategoryHandler) Handle(writer http.ResponseWriter, request
 		return
 	}
 
-	var command UpdateCategoryRequest
-	err = json.NewDecoder(request.Body).Decode(&command)
+	command, err := utils.DecodeValid[UpdateCategoryRequest](context, request)
+
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	validationErrors := validateUpdateCategoryRequest(command)
-	if validationErrors != nil {
-		utils.TraceError(span, validationErrors)
-		http.Error(writer, validationErrors.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -92,7 +85,7 @@ func (handler *updateCategoryHandler) Handle(writer http.ResponseWriter, request
 	writer.WriteHeader(http.StatusNoContent)
 }
 
-func validateUpdateCategoryRequest(request UpdateCategoryRequest) error {
+func (request UpdateCategoryRequest) Valid(context context.Context) error {
 	if request.Name == "" {
 		return fmt.Errorf("name cannot be empty")
 	}

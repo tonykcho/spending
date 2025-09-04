@@ -1,7 +1,7 @@
 package spending_handlers
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
 	"net/http"
 	"spending/mappers"
@@ -38,6 +38,19 @@ type CreateSpendingRequest struct {
 	CategoryId   uuid.UUID `json:"category_id"`
 }
 
+func (request CreateSpendingRequest) Valid(context context.Context) error {
+	if request.Amount <= 0 {
+		return fmt.Errorf("amount must be greater than zero")
+	}
+	if request.SpendingDate.IsZero() {
+		return fmt.Errorf("spending date cannot be empty")
+	}
+	if request.CategoryId == uuid.Nil {
+		return fmt.Errorf("category_id cannot be empty")
+	}
+	return nil
+}
+
 func (handler *createSpendingHandler) Handle(writer http.ResponseWriter, request *http.Request) {
 	// Trace the request
 	tracer := otel.Tracer("spending-api")
@@ -45,20 +58,11 @@ func (handler *createSpendingHandler) Handle(writer http.ResponseWriter, request
 	defer span.End()
 
 	// Parse the request body into CreateSpendingRequest struct
-	var command CreateSpendingRequest
-	err := json.NewDecoder(request.Body).Decode(&command)
+	command, err := utils.DecodeValid[CreateSpendingRequest](context, request)
 
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	// Validate the request
-	validationErrors := validateRequest(command)
-	if validationErrors != nil {
-		utils.TraceError(span, validationErrors)
-		http.Error(writer, validationErrors.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -102,20 +106,6 @@ func (handler *createSpendingHandler) Handle(writer http.ResponseWriter, request
 	response := mappers.MapSpending(spending)
 
 	// Return 201 created response
-	writer.WriteHeader(http.StatusCreated)
-	err = json.NewEncoder(writer).Encode(response)
+	err = utils.Encode(context, writer, http.StatusCreated, response)
 	utils.TraceError(span, err)
-}
-
-func validateRequest(request CreateSpendingRequest) error {
-	if request.Amount <= 0 {
-		return fmt.Errorf("amount must be greater than zero")
-	}
-	if request.SpendingDate.IsZero() {
-		return fmt.Errorf("spending date cannot be empty")
-	}
-	if request.CategoryId == uuid.Nil {
-		return fmt.Errorf("category_id cannot be empty")
-	}
-	return nil
 }

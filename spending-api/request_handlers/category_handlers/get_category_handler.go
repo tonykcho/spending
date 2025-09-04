@@ -1,7 +1,6 @@
 package category_handlers
 
 import (
-	"encoding/json"
 	"net/http"
 	"spending/mappers"
 	"spending/repositories/category_repo"
@@ -50,6 +49,6 @@ func (handler *getCategoryHandler) Handle(writer http.ResponseWriter, request *h
 
 	response := mappers.MapCategory(category)
 
-	err = json.NewEncoder(writer).Encode(response)
+	err = utils.Encode(context, writer, http.StatusOK, response)
 	utils.TraceError(span, err)
 }

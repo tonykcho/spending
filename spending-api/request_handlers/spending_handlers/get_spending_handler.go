@@ -1,7 +1,6 @@
 package spending_handlers
 
 import (
-	"encoding/json"
 	"net/http"
 	"spending/mappers"
 	"spending/repositories/spending_repo"
@@ -58,6 +57,6 @@ func (handler *getSpendingHandler) Handle(writer http.ResponseWriter, request *h
 
 	response := mappers.MapSpending(spending)
 
-	err = json.NewEncoder(writer).Encode(response)
+	err = utils.Encode(context, writer, http.StatusOK, response)
 	utils.TraceError(span, err)
 }

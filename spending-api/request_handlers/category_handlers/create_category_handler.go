@@ -1,7 +1,7 @@
 package category_handlers
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
 	"net/http"
 	"spending/mappers"
@@ -31,26 +31,24 @@ type CreateCategoryRequest struct {
 	Name string `json:"name"`
 }
 
+func (request CreateCategoryRequest) Valid(context context.Context) error {
+	if request.Name == "" {
+		return fmt.Errorf("name cannot be empty")
+	}
+	return nil
+}
+
 func (handler *createCategoryHandler) Handle(writer http.ResponseWriter, request *http.Request) {
 	tracer := otel.Tracer("spending-api")
 	context, span := tracer.Start(request.Context(), "CreateCategoryHandler")
 	defer span.End()
 
 	// Parse the request body into CreateCategoryRequest struct
-	var command CreateCategoryRequest
-	err := json.NewDecoder(request.Body).Decode(&command)
+	command, err := utils.DecodeValid[CreateCategoryRequest](context, request)
 
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	// Validate the request
-	validationErrors := validateCreateCategoryRequest(command)
-	if validationErrors != nil {
-		utils.TraceError(span, validationErrors)
-		http.Error(writer, validationErrors.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -89,14 +87,6 @@ func (handler *createCategoryHandler) Handle(writer http.ResponseWriter, request
 
 	response := mappers.MapCategory(category)
 
-	writer.WriteHeader(http.StatusCreated)
-	err = json.NewEncoder(writer).Encode(response)
+	err = utils.Encode(context, writer, http.StatusCreated, response)
 	utils.TraceError(span, err)
-}
-
-func validateCreateCategoryRequest(request CreateCategoryRequest) error {
-	if request.Name == "" {
-		return fmt.Errorf("name cannot be empty")
-	}
-	return nil
 }

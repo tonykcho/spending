@@ -10,10 +10,10 @@ POST http://localhost:8001/spending HTTP/1.1
 Content-Type: application/json
 
 {
-  "amount": 100,
-  "remark": "Test spending",
+  "amount": 20,
+  "remark": "Bread",
   "spending_date": "2023-10-01T00:00:00Z",
-  "category": "Food"
+  "category_id": "f653fceb-f5f4-465d-95ab-dc383232a2a5"
 }
 
 ###
@@ -30,5 +30,5 @@ POST http://localhost:8001/categories HTTP/1.1
 Content-Type: application/json
 
 {
-  "name": "Food"
+  "name": "Dinning"
 }
