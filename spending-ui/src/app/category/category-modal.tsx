@@ -4,31 +4,38 @@ import { Category, CreateCategoryDto, UpdateCategoryDto } from "@/models/categor
 import React, { forwardRef, useImperativeHandle } from "react";
 import { createCategoryAsync, updateCategoryAsync } from "@/services/category-service";
 
-interface CategoryFormData {
+interface CategoryFormData
+{
     uuid: string | null;
     name: string;
 }
 
-export interface CategoryModalRef {
+export interface CategoryModalRef
+{
     open: (category: Category | null) => void;
 }
 
-export interface CategoryModalProps {
+export interface CategoryModalProps
+{
     onCategoryChanged?: () => void
 }
 
-const CategoryModal = forwardRef<CategoryModalRef, CategoryModalProps>((props, ref) => {
+const CategoryModal = forwardRef<CategoryModalRef, CategoryModalProps>((props, ref) =>
+{
     const [isOpen, setIsOpen] = React.useState(false);
     const [formData, setFormData] = React.useState<CategoryFormData>({ uuid: null, name: "" });
 
-    function openModal(category: Category | null = null) {
+    function openModal(category: Category | null = null)
+    {
         setIsOpen(true);
-        if (category != null) {
+        if (category != null)
+        {
             setFormData({ uuid: category.uuid, name: category.name });
         }
     }
 
-    function closeModal() {
+    function closeModal()
+    {
         setIsOpen(false);
     }
 
@@ -36,14 +43,18 @@ const CategoryModal = forwardRef<CategoryModalRef, CategoryModalProps>((props, r
         open: openModal,
     }));
 
-    async function submit() {
-        if (formData.name.trim() === "") {
+    async function submit()
+    {
+        if (formData.name.trim() === "")
+        {
             return;
         }
 
-        if (formData.uuid != null) {
+        if (formData.uuid != null)
+        {
             await updateCategory();
-        } else {
+        } else
+        {
             await createCategory();
         }
 
@@ -52,20 +63,23 @@ const CategoryModal = forwardRef<CategoryModalRef, CategoryModalProps>((props, r
         closeModal();
     }
 
-    async function createCategory() {
-        var requestData: CreateCategoryDto = {
+    async function createCategory()
+    {
+        const requestData: CreateCategoryDto = {
             Name: formData.name
         }
 
         await createCategoryAsync(requestData);
     }
 
-    async function updateCategory() {
-        if (!formData.uuid) {
+    async function updateCategory()
+    {
+        if (!formData.uuid)
+        {
             throw new Error("Category UUID is required for update.");
         }
 
-        var requestData: UpdateCategoryDto = {
+        const requestData: UpdateCategoryDto = {
             Name: formData.name
         }
 
@@ -108,5 +122,7 @@ const CategoryModal = forwardRef<CategoryModalRef, CategoryModalProps>((props, r
         </div>
     );
 });
+
+CategoryModal.displayName = "CategoryModal";
 
 export default CategoryModal;

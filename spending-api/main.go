@@ -105,6 +105,7 @@ func configureEndpoints(router *mux.Router, db *sql.DB) {
 	router.HandleFunc("/spending/{id}", container.GetSpendingHandler.Handle).Methods("GET")
 	router.HandleFunc("/spending", container.GetSpendingListHandler.Handle).Methods("GET")
 	router.HandleFunc("/spending", container.CreateSpendingHandler.Handle).Methods("POST")
+	router.HandleFunc("/spending/{id}", container.DeleteSpendingHandler.Handle).Methods("DELETE")
 
 	router.HandleFunc("/categories/{id}", container.GetCategoryHandler.Handle).Methods("GET")
 	router.HandleFunc("/categories", container.GetCategoryListHandler.Handle).Methods("GET")

@@ -5,24 +5,29 @@ import React, { useEffect } from "react"
 import CategoryModal, { CategoryModalRef } from "./category-modal";
 import { deleteCategoryAsync, getCategoryListAsync } from "@/services/category-service";
 
-export default function CategoryPage() {
+export default function CategoryPage()
+{
     const [categories, setCategories] = React.useState<Category[]>([]);
     const modalRef = React.useRef<CategoryModalRef>(null);
 
-    useEffect(() => {
+    useEffect(() =>
+    {
         fetchCategories();
     }, []);
 
-    async function fetchCategories() {
+    async function fetchCategories()
+    {
         const categories = await getCategoryListAsync();
         setCategories(categories);
     }
 
-    function OnCategoryEdit(category: Category) {
+    function onCategoryEdit(category: Category)
+    {
         modalRef.current?.open(category);
     }
 
-    async function OnCategoryDeleted(category: Category) {
+    async function onCategoryDeleted(category: Category)
+    {
         await deleteCategoryAsync(category.uuid);
         await fetchCategories();
     }
@@ -36,8 +41,8 @@ export default function CategoryPage() {
                             <h1 className="self-center text-2xl font-semibold">{category.name}</h1>
 
                             <div className="flex flex-row mt-5 justify-between">
-                                <button className="btn btn-danger" onClick={() => OnCategoryDeleted(category)}>Delete</button>
-                                <button className="btn btn-primary" onClick={() => OnCategoryEdit(category)}>Edit</button>
+                                <button className="btn btn-danger" onClick={() => onCategoryDeleted(category)}>Delete</button>
+                                <button className="btn btn-primary" onClick={() => onCategoryEdit(category)}>Edit</button>
                             </div>
                         </div>
                     </div>
