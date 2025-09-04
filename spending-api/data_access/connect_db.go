@@ -7,11 +7,11 @@ import (
 
 func OpenDatabase() *sql.DB {
 	connectionString := utils.GetDatabaseConnection()
-	DB, err := sql.Open("postgres", connectionString)
+	db, err := sql.Open("postgres", connectionString)
 	if err != nil {
 		utils.CheckError(err)
 	}
-	return DB
+	return db
 }
 
 func OpenPostgres() *sql.DB {

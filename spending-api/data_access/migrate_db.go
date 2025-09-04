@@ -1,6 +1,7 @@
 package data_access
 
 import (
+	"database/sql"
 	"spending/utils"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -8,9 +9,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-func MigrateDatabase() {
-	db := OpenDatabase()
-
+func MigrateDatabase(db *sql.DB) {
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	utils.CheckError(err)
 	migration, err := migrate.NewWithDatabaseInstance("file://migrations", "postgres", driver)
@@ -22,9 +21,7 @@ func MigrateDatabase() {
 	}
 }
 
-func MigrateTestDatabase() {
-	db := OpenDatabase()
-
+func MigrateTestDatabase(db *sql.DB) {
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	utils.CheckError(err)
 	migration, err := migrate.NewWithDatabaseInstance("file://../migrations", "postgres", driver)

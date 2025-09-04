@@ -59,14 +59,15 @@ func NewContainer(db *sql.DB) *Container {
 }
 
 func main() {
+	// Make sure database is up.
+	data_access.CreateDatabase()
+
 	router := mux.NewRouter()
-
-	configureLogging()
-	configureDatabase()
-
 	db := data_access.OpenDatabase()
 	defer db.Close()
 
+	configureLogging()
+	data_access.MigrateDatabase(db)
 	configureEndpoints(router, db)
 	configureOpenTelemetry()
 
@@ -91,11 +92,6 @@ func configureLogging() {
 
 	multi := zerolog.MultiLevelWriter(os.Stdout, logFile)
 	log.Logger = zerolog.New(multi).With().Timestamp().Logger()
-}
-
-func configureDatabase() {
-	data_access.CreateDatabase()
-	data_access.MigrateDatabase()
 }
 
 func configureEndpoints(router *mux.Router, db *sql.DB) {
