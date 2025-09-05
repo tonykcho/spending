@@ -32,3 +32,17 @@ Content-Type: application/json
 {
   "name": "Dinning"
 }
+
+###
+Get http://localhost:8001/stores
+
+###
+POST http://localhost:8001/stores HTTP/1.1
+Content-Type: application/json
+
+{
+  "categoryId": "f653fceb-f5f4-465d-95ab-dc383232a2a5",
+  "name": "Wellcome"
+}
+
+###

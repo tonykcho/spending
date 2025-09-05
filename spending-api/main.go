@@ -12,6 +12,7 @@ import (
 	"spending/request_handlers"
 	"spending/request_handlers/category_handlers"
 	"spending/request_handlers/spending_handlers"
+	"spending/request_handlers/store_handlers"
 	"spending/utils"
 	"time"
 
@@ -44,6 +45,11 @@ type Container struct {
 	GetSpendingHandler     request_handlers.RequestHandler
 	GetSpendingListHandler request_handlers.RequestHandler
 	DeleteSpendingHandler  request_handlers.RequestHandler
+
+	CreateStoreHandler  request_handlers.RequestHandler
+	DeleteStoreHandler  request_handlers.RequestHandler
+	GetStoreHandler     request_handlers.RequestHandler
+	GetStoreListHandler request_handlers.RequestHandler
 }
 
 func NewContainer(db *sql.DB) *Container {
@@ -66,6 +72,11 @@ func NewContainer(db *sql.DB) *Container {
 		GetSpendingHandler:     spending_handlers.NewGetSpendingHandler(spendingRepo),
 		GetSpendingListHandler: spending_handlers.NewGetSpendingListHandler(spendingRepo),
 		DeleteSpendingHandler:  spending_handlers.NewDeleteSpendingHandler(spendingRepo),
+
+		CreateStoreHandler:  store_handlers.NewCreateStoreHandler(storeRepo, categoryRepo),
+		DeleteStoreHandler:  store_handlers.NewDeleteStoreHandler(storeRepo),
+		GetStoreHandler:     store_handlers.NewGetStoreHandler(storeRepo),
+		GetStoreListHandler: store_handlers.NewGetStoreListHandler(storeRepo),
 	}
 }
 
@@ -118,6 +129,11 @@ func configureEndpoints(router *mux.Router, db *sql.DB) {
 	router.HandleFunc("/categories", container.CreateCategoryHandler.Handle).Methods("POST")
 	router.HandleFunc("/categories/{id}", container.UpdateCategoryHandler.Handle).Methods("PUT")
 	router.HandleFunc("/categories/{id}", container.DeleteCategoryHandler.Handle).Methods("DELETE")
+
+	router.HandleFunc("/stores/{id}", container.GetStoreHandler.Handle).Methods("GET")
+	router.HandleFunc("/stores", container.GetStoreListHandler.Handle).Methods("GET")
+	router.HandleFunc("/stores", container.CreateStoreHandler.Handle).Methods("POST")
+	router.HandleFunc("/stores/{id}", container.DeleteStoreHandler.Handle).Methods("DELETE")
 
 	router.HandleFunc("/metrics", promhttp.Handler().ServeHTTP)
 }
