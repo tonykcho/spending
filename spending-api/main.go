@@ -8,6 +8,8 @@ import (
 	"spending/data_access"
 	"spending/repositories/category_repo"
 	"spending/repositories/spending_repo"
+	"spending/repositories/store_repo"
+	"spending/request_handlers"
 	"spending/request_handlers/category_handlers"
 	"spending/request_handlers/spending_handlers"
 	"spending/utils"
@@ -30,26 +32,30 @@ import (
 type Container struct {
 	CategoryRepository category_repo.CategoryRepository
 	SpendingRepository spending_repo.SpendingRepository
+	StoreRepository    store_repo.StoreRepository
 
-	CreateCategoryHandler  category_handlers.CreateCategoryHandler
-	DeleteCategoryHandler  category_handlers.DeleteCategoryHandler
-	GetCategoryHandler     category_handlers.GetCategoryHandler
-	GetCategoryListHandler category_handlers.GetCategoryListHandler
-	UpdateCategoryHandler  category_handlers.UpdateCategoryHandler
+	CreateCategoryHandler  request_handlers.RequestHandler
+	DeleteCategoryHandler  request_handlers.RequestHandler
+	GetCategoryHandler     request_handlers.RequestHandler
+	GetCategoryListHandler request_handlers.RequestHandler
+	UpdateCategoryHandler  request_handlers.RequestHandler
 
-	CreateSpendingHandler  spending_handlers.CreateSpendingHandler
-	GetSpendingHandler     spending_handlers.GetSpendingHandler
-	GetSpendingListHandler spending_handlers.GetSpendingListHandler
-	DeleteSpendingHandler  spending_handlers.DeleteSpendingHandler
+	CreateSpendingHandler  request_handlers.RequestHandler
+	GetSpendingHandler     request_handlers.RequestHandler
+	GetSpendingListHandler request_handlers.RequestHandler
+	DeleteSpendingHandler  request_handlers.RequestHandler
 }
 
 func NewContainer(db *sql.DB) *Container {
 	categoryRepo := category_repo.NewCategoryRepository(db)
 	spendingRepo := spending_repo.NewSpendingRepository(db)
+	storeRepo := store_repo.NewStoreRepository(db)
 
 	return &Container{
-		CategoryRepository:     categoryRepo,
-		SpendingRepository:     spendingRepo,
+		CategoryRepository: categoryRepo,
+		SpendingRepository: spendingRepo,
+		StoreRepository:    storeRepo,
+
 		CreateCategoryHandler:  category_handlers.NewCreateCategoryHandler(categoryRepo),
 		DeleteCategoryHandler:  category_handlers.NewDeleteCategoryHandler(categoryRepo),
 		GetCategoryHandler:     category_handlers.NewGetCategoryHandler(categoryRepo),

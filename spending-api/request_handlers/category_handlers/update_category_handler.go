@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"spending/repositories/category_repo"
+	"spending/request_handlers"
 	"spending/utils"
 	"time"
 
@@ -13,15 +14,11 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-type UpdateCategoryHandler interface {
-	Handle(writer http.ResponseWriter, request *http.Request)
-}
-
 type updateCategoryHandler struct {
 	category_repo category_repo.CategoryRepository
 }
 
-func NewUpdateCategoryHandler(categoryRepo category_repo.CategoryRepository) UpdateCategoryHandler {
+func NewUpdateCategoryHandler(categoryRepo category_repo.CategoryRepository) request_handlers.RequestHandler {
 	return &updateCategoryHandler{
 		category_repo: categoryRepo,
 	}

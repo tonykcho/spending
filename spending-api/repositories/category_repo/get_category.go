@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"spending/models"
+	"spending/repositories"
 	"spending/utils"
 	"strings"
 
@@ -17,24 +18,23 @@ func (repo *categoryRepository) GetCategoryById(context context.Context, id int)
 	_, span := tracer.Start(context, "DB:GetCategoryById")
 	defer span.End()
 
-	rows, err := repo.db.Query(`SELECT
-							id,
-							uuid,
-							name,
-							created_at,
-							updated_at
-						FROM categories
-						WHERE id = $1
-						AND is_deleted = FALSE`, id)
+	query := `
+		SELECT
+			id,
+			uuid,
+			name,
+			created_at,
+			updated_at
+		FROM categories
+		WHERE id = $1
+		AND is_deleted = FALSE
+	`
 
-	utils.TraceError(span, err)
-	defer rows.Close()
-
-	if !rows.Next() {
-		return nil, err
+	var dbQuery = func() (*sql.Rows, error) {
+		return repo.db.Query(query, id)
 	}
 
-	category := readCategory(rows)
+	category, err := repositories.Query(span, dbQuery, readCategory)
 
 	return category, err
 }
@@ -44,24 +44,23 @@ func (repo *categoryRepository) GetCategoryByUUId(context context.Context, uuid 
 	_, span := tracer.Start(context, "DB:GetCategoryByUUId")
 	defer span.End()
 
-	rows, err := repo.db.Query(`SELECT
-							id,
-							uuid,
-							name,
-							created_at,
-							updated_at
-						FROM categories
-						WHERE uuid = $1
-						AND is_deleted = FALSE`, uuid)
+	query := `
+		SELECT
+			id,
+			uuid,
+			name,
+			created_at,
+			updated_at
+		FROM categories
+		WHERE uuid = $1
+		AND is_deleted = FALSE
+	`
 
-	utils.TraceError(span, err)
-	defer rows.Close()
-
-	if !rows.Next() {
-		return nil, err
+	dbQuery := func() (*sql.Rows, error) {
+		return repo.db.Query(query, uuid)
 	}
 
-	category := readCategory(rows)
+	category, err := repositories.Query(span, dbQuery, readCategory)
 
 	return category, err
 }
@@ -71,24 +70,23 @@ func (repo *categoryRepository) GetCategoryByName(context context.Context, name 
 	_, span := tracer.Start(context, "DB:GetCategoryByName")
 	defer span.End()
 
-	rows, err := repo.db.Query(`SELECT
-							id,
-							uuid,
-							name,
-							created_at,
-							updated_at
-						FROM categories
-						WHERE name = $1
-						AND is_deleted = FALSE`, name)
+	query := `
+		SELECT
+			id,
+			uuid,
+			name,
+			created_at,
+			updated_at
+		FROM categories
+		WHERE name = $1
+		AND is_deleted = FALSE
+	`
 
-	utils.TraceError(span, err)
-	defer rows.Close()
-
-	if !rows.Next() {
-		return nil, err
+	dbQuery := func() (*sql.Rows, error) {
+		return repo.db.Query(query, name)
 	}
 
-	category := readCategory(rows)
+	category, err := repositories.Query(span, dbQuery, readCategory)
 
 	return category, err
 }
@@ -98,27 +96,22 @@ func (repo *categoryRepository) GetCategoryList(context context.Context) ([]*mod
 	_, span := tracer.Start(context, "DB:GetCategoryList")
 	defer span.End()
 
-	var query string = `SELECT
-							id,
-							uuid,
-							name,
-							created_at,
-							updated_at
-						FROM categories
-						WHERE is_deleted = FALSE`
+	var query string = `
+		SELECT
+			id,
+			uuid,
+			name,
+			created_at,
+			updated_at
+		FROM categories
+		WHERE is_deleted = FALSE
+	`
 
-	rows, err := repo.db.Query(query)
-	utils.TraceError(span, err)
-	defer rows.Close()
-
-	var categories []*models.Category = make([]*models.Category, 0)
-
-	for rows.Next() {
-		category := readCategory(rows)
-		if category != nil {
-			categories = append(categories, category)
-		}
+	dbQuery := func() (*sql.Rows, error) {
+		return repo.db.Query(query)
 	}
+
+	categories, err := repositories.QueryList(span, dbQuery, readCategory)
 
 	return categories, err
 }
@@ -147,19 +140,12 @@ func (repo *categoryRepository) GetCategoryListByIds(context context.Context, id
 						  FROM categories
 						  WHERE id IN (%s)
 						  AND is_deleted = FALSE`, strings.Join(placeholders, ","))
-	rows, err := repo.db.Query(query, args...)
 
-	utils.TraceError(span, err)
-	defer rows.Close()
-
-	var categories []*models.Category
-
-	for rows.Next() {
-		category := readCategory(rows)
-		if category != nil {
-			categories = append(categories, category)
-		}
+	dbQuery := func() (*sql.Rows, error) {
+		return repo.db.Query(query, args...)
 	}
+
+	categories, err := repositories.QueryList(span, dbQuery, readCategory)
 
 	return categories, err
 }

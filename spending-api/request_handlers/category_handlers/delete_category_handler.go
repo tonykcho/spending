@@ -3,6 +3,7 @@ package category_handlers
 import (
 	"net/http"
 	"spending/repositories/category_repo"
+	"spending/request_handlers"
 	"spending/utils"
 
 	"github.com/google/uuid"
@@ -10,15 +11,11 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-type DeleteCategoryHandler interface {
-	Handle(writer http.ResponseWriter, request *http.Request)
-}
-
 type deleteCategoryHandler struct {
 	category_repo category_repo.CategoryRepository
 }
 
-func NewDeleteCategoryHandler(categoryRepo category_repo.CategoryRepository) DeleteCategoryHandler {
+func NewDeleteCategoryHandler(categoryRepo category_repo.CategoryRepository) request_handlers.RequestHandler {
 	return &deleteCategoryHandler{
 		category_repo: categoryRepo,
 	}

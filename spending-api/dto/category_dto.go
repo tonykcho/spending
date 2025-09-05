@@ -1,4 +1,4 @@
-package responses
+package dto
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type CategoryResponse struct {
+type CategoryDto struct {
 	UUId      uuid.UUID
 	Name      string
 	CreatedAt time.Time

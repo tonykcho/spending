@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"spending/models"
+	"spending/repositories"
 	"spending/utils"
 
 	"github.com/google/uuid"
@@ -15,28 +16,28 @@ func (repo *spendingRepository) GetSpendingById(context context.Context, id int)
 	_, span := tracer.Start(context, "DB:GetSpendingById")
 	defer span.End()
 
-	rows, err := repo.db.Query(`SELECT
-							id,
-							uuid,
-							amount,
-							remark,
-							spending_date,
-							category_id,
-							created_at,
-							updated_at
-						FROM spending_records
-						WHERE id = $1
-						AND is_deleted = FALSE`, id)
-	utils.TraceError(span, err)
-	defer rows.Close()
+	query := `
+		SELECT
+			id,
+			uuid,
+			amount,
+			remark,
+			spending_date,
+			category_id,
+			created_at,
+			updated_at
+		FROM spending_records
+		WHERE id = $1
+		AND is_deleted = FALSE
+	`
 
-	if !rows.Next() {
-		return nil, err
+	dbQuery := func() (*sql.Rows, error) {
+		return repo.db.Query(query, id)
 	}
 
-	record := readSpendingRecord(rows)
+	record, err := repositories.Query(span, dbQuery, readSpendingRecord)
 
-	return record, nil
+	return record, err
 }
 
 func (repo *spendingRepository) GetSpendingByUUId(context context.Context, uuid uuid.UUID) (*models.SpendingRecord, error) {
@@ -44,30 +45,28 @@ func (repo *spendingRepository) GetSpendingByUUId(context context.Context, uuid 
 	_, span := tracer.Start(context, "GetSpendingByUUId")
 	defer span.End()
 
-	var query string = `SELECT
-							id,
-							uuid,
-							amount,
-							remark,
-							spending_date,
-							category_id,
-							created_at,
-							updated_at
-						FROM spending_records
-						WHERE uuid = $1
-						AND is_deleted = FALSE`
+	var query string = `
+		SELECT
+			id,
+			uuid,
+			amount,
+			remark,
+			spending_date,
+			category_id,
+			created_at,
+			updated_at
+		FROM spending_records
+		WHERE uuid = $1
+		AND is_deleted = FALSE
+	`
 
-	rows, err := repo.db.Query(query, uuid.String())
-	utils.TraceError(span, err)
-	defer rows.Close()
-
-	if !rows.Next() {
-		return nil, err
+	dbQuery := func() (*sql.Rows, error) {
+		return repo.db.Query(query, uuid)
 	}
 
-	record := readSpendingRecord(rows)
+	record, err := repositories.Query(span, dbQuery, readSpendingRecord)
 
-	return record, nil
+	return record, err
 }
 
 func (repo *spendingRepository) GetSpendingList(context context.Context) ([]*models.SpendingRecord, error) {
@@ -75,31 +74,26 @@ func (repo *spendingRepository) GetSpendingList(context context.Context) ([]*mod
 	_, span := tracer.Start(context, "DB:GetSpendingList")
 	defer span.End()
 
-	var query string = `SELECT 
-							id,
-							uuid,
-							amount,
-							remark,
-							spending_date,
-							category_id,
-							created_at,
-							updated_at
-						FROM spending_records
-						WHERE is_deleted = FALSE
-						ORDER BY spending_date DESC`
+	var query string = `
+		SELECT 
+			id,
+			uuid,
+			amount,
+			remark,
+			spending_date,
+			category_id,
+			created_at,
+			updated_at
+		FROM spending_records
+		WHERE is_deleted = FALSE
+		ORDER BY spending_date DESC
+	`
 
-	rows, err := repo.db.Query(query)
-	utils.TraceError(span, err)
-	defer rows.Close()
-
-	var records []*models.SpendingRecord
-
-	for rows.Next() {
-		record := readSpendingRecord(rows)
-		if record != nil {
-			records = append(records, record)
-		}
+	dbQuery := func() (*sql.Rows, error) {
+		return repo.db.Query(query)
 	}
+
+	records, err := repositories.QueryList(span, dbQuery, readSpendingRecord)
 
 	return records, err
 }

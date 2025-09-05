@@ -7,21 +7,18 @@ import (
 	"spending/mappers"
 	"spending/models"
 	"spending/repositories/category_repo"
+	"spending/request_handlers"
 	"spending/utils"
 	"time"
 
 	"go.opentelemetry.io/otel"
 )
 
-type CreateCategoryHandler interface {
-	Handle(writer http.ResponseWriter, request *http.Request)
-}
-
 type createCategoryHandler struct {
 	category_repo category_repo.CategoryRepository
 }
 
-func NewCreateCategoryHandler(categoryRepo category_repo.CategoryRepository) CreateCategoryHandler {
+func NewCreateCategoryHandler(categoryRepo category_repo.CategoryRepository) request_handlers.RequestHandler {
 	return &createCategoryHandler{
 		category_repo: categoryRepo,
 	}

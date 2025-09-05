@@ -1,12 +1,12 @@
 package mappers
 
 import (
+	"spending/dto"
 	"spending/models"
-	"spending/responses"
 )
 
-func MapSpending(spending *models.SpendingRecord) *responses.SpendingResponse {
-	response := &responses.SpendingResponse{
+func MapSpending(spending *models.SpendingRecord) *dto.SpendingDto {
+	dto := &dto.SpendingDto{
 		UUId:         spending.UUId,
 		Amount:       spending.Amount,
 		Remark:       spending.Remark,
@@ -15,19 +15,19 @@ func MapSpending(spending *models.SpendingRecord) *responses.SpendingResponse {
 
 	if spending.Category != nil {
 		category := MapCategory(spending.Category)
-		response.Category = category
+		dto.Category = category
 	}
 
-	return response
+	return dto
 }
 
-func MapSpendingList(spendingList []*models.SpendingRecord) []*responses.SpendingResponse {
-	var responseList []*responses.SpendingResponse = make([]*responses.SpendingResponse, 0)
+func MapSpendingList(spendingList []*models.SpendingRecord) []*dto.SpendingDto {
+	var dtoList []*dto.SpendingDto = make([]*dto.SpendingDto, 0)
 
 	for _, spending := range spendingList {
-		response := MapSpending(spending)
-		responseList = append(responseList, response)
+		dto := MapSpending(spending)
+		dtoList = append(dtoList, dto)
 	}
 
-	return responseList
+	return dtoList
 }

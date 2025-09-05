@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"spending/mappers"
 	"spending/repositories/spending_repo"
+	"spending/request_handlers"
 	"spending/utils"
 
 	"github.com/google/uuid"
@@ -11,15 +12,11 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-type GetSpendingHandler interface {
-	Handle(writer http.ResponseWriter, request *http.Request)
-}
-
 type getSpendingHandler struct {
 	spending_repo spending_repo.SpendingRepository
 }
 
-func NewGetSpendingHandler(spendingRepo spending_repo.SpendingRepository) GetSpendingHandler {
+func NewGetSpendingHandler(spendingRepo spending_repo.SpendingRepository) request_handlers.RequestHandler {
 	return &getSpendingHandler{
 		spending_repo: spendingRepo,
 	}

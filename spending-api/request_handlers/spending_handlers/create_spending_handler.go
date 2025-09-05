@@ -8,6 +8,7 @@ import (
 	"spending/models"
 	"spending/repositories/category_repo"
 	"spending/repositories/spending_repo"
+	"spending/request_handlers"
 	"spending/utils"
 	"time"
 
@@ -15,16 +16,12 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-type CreateSpendingHandler interface {
-	Handle(writer http.ResponseWriter, request *http.Request)
-}
-
 type createSpendingHandler struct {
 	spending_repo spending_repo.SpendingRepository
 	category_repo category_repo.CategoryRepository
 }
 
-func NewCreateSpendingHandler(spendingRepo spending_repo.SpendingRepository, categoryRepo category_repo.CategoryRepository) CreateSpendingHandler {
+func NewCreateSpendingHandler(spendingRepo spending_repo.SpendingRepository, categoryRepo category_repo.CategoryRepository) request_handlers.RequestHandler {
 	return &createSpendingHandler{
 		spending_repo: spendingRepo,
 		category_repo: categoryRepo,

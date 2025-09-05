@@ -1,4 +1,4 @@
-package responses
+package dto
 
 import (
 	"time"
@@ -6,10 +6,10 @@ import (
 	"github.com/google/uuid"
 )
 
-type SpendingResponse struct {
+type SpendingDto struct {
 	UUId         uuid.UUID
 	Amount       float32
 	Remark       string
 	SpendingDate time.Time
-	Category     *CategoryResponse
+	Category     *CategoryDto
 }

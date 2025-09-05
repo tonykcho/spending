@@ -4,20 +4,18 @@ import (
 	"net/http"
 	"spending/mappers"
 	"spending/repositories/spending_repo"
+	"spending/request_handlers"
 	"spending/utils"
 
 	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel"
 )
 
-type GetSpendingListHandler interface {
-	Handle(writer http.ResponseWriter, request *http.Request)
-}
 type getSpendingListHandler struct {
 	spending_repo spending_repo.SpendingRepository
 }
 
-func NewGetSpendingListHandler(spendingRepo spending_repo.SpendingRepository) GetSpendingListHandler {
+func NewGetSpendingListHandler(spendingRepo spending_repo.SpendingRepository) request_handlers.RequestHandler {
 	return &getSpendingListHandler{
 		spending_repo: spendingRepo,
 	}

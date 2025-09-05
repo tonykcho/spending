@@ -1,31 +1,31 @@
 package mappers
 
 import (
+	"spending/dto"
 	"spending/models"
-	"spending/responses"
 )
 
-func MapCategory(category *models.Category) *responses.CategoryResponse {
+func MapCategory(category *models.Category) *dto.CategoryDto {
 	if category == nil {
 		return nil
 	}
 
-	response := &responses.CategoryResponse{
+	dto := &dto.CategoryDto{
 		UUId:      category.UUId,
 		Name:      category.Name,
 		CreatedAt: category.CreatedAt,
 		UpdatedAt: category.UpdatedAt,
 	}
 
-	return response
+	return dto
 }
 
-func MapCategoryList(categoryList []*models.Category) []*responses.CategoryResponse {
-	var responseList []*responses.CategoryResponse = make([]*responses.CategoryResponse, 0)
+func MapCategoryList(categoryList []*models.Category) []*dto.CategoryDto {
+	var dtoList []*dto.CategoryDto = make([]*dto.CategoryDto, 0)
 
 	for _, category := range categoryList {
-		response := MapCategory(category)
-		responseList = append(responseList, response)
+		dto := MapCategory(category)
+		dtoList = append(dtoList, dto)
 	}
-	return responseList
+	return dtoList
 }

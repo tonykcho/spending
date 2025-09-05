@@ -3,6 +3,7 @@ package spending_handlers
 import (
 	"net/http"
 	"spending/repositories/spending_repo"
+	"spending/request_handlers"
 	"spending/utils"
 
 	"github.com/google/uuid"
@@ -10,15 +11,11 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-type DeleteSpendingHandler interface {
-	Handle(writer http.ResponseWriter, request *http.Request)
-}
-
 type deleteSpendingHandler struct {
 	spending_repo spending_repo.SpendingRepository
 }
 
-func NewDeleteSpendingHandler(spendingRepo spending_repo.SpendingRepository) DeleteSpendingHandler {
+func NewDeleteSpendingHandler(spendingRepo spending_repo.SpendingRepository) request_handlers.RequestHandler {
 	return &deleteSpendingHandler{
 		spending_repo: spendingRepo,
 	}
