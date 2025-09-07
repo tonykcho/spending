@@ -3,8 +3,7 @@ package repositories
 import "database/sql"
 
 type UnitOfWork interface {
-	BeginTx() (*sql.Tx, error)
-	CommitOrRollback(tx *sql.Tx, err error)
+	WithTransaction(fn func(tx *sql.Tx) error) error
 }
 
 type unitOfWork struct {
@@ -15,14 +14,22 @@ func NewUnitOfWork(db *sql.DB) *unitOfWork {
 	return &unitOfWork{db: db}
 }
 
-func (uow *unitOfWork) BeginTx() (*sql.Tx, error) {
-	return uow.db.Begin()
-}
-
-func (uow *unitOfWork) CommitOrRollback(tx *sql.Tx, err error) {
+func (u *unitOfWork) WithTransaction(fn func(tx *sql.Tx) error) error {
+	tx, err := u.db.Begin()
 	if err != nil {
-		tx.Rollback()
-	} else {
-		tx.Commit()
+		return err
 	}
+	defer func() {
+		if p := recover(); p != nil {
+			tx.Rollback()
+			panic(p)
+		}
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
+
+	return fn(tx)
 }

@@ -1,6 +1,7 @@
 package store_handlers
 
 import (
+	"database/sql"
 	"net/http"
 	"spending/repositories"
 	"spending/repositories/store_repo"
@@ -37,19 +38,20 @@ func (handler *deleteStoreHandler) Handle(writer http.ResponseWriter, request *h
 		return
 	}
 
-	// Start a new transaction
-	tx, err := handler.unit_of_work.BeginTx()
-	if err != nil {
-		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer handler.unit_of_work.CommitOrRollback(tx, err)
+	status := http.StatusInternalServerError
 
-	err = handler.store_repo.DeleteStore(ctx, tx, storeUUId)
+	err = handler.unit_of_work.WithTransaction(func(tx *sql.Tx) error {
+		txErr := handler.store_repo.DeleteStore(ctx, tx, storeUUId)
+		if txErr != nil {
+			status = http.StatusInternalServerError
+			return txErr
+		}
+		return nil
+	})
+
 	if err != nil {
 		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		http.Error(writer, err.Error(), status)
 		return
 	}
 

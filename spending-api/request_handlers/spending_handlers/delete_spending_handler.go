@@ -1,6 +1,7 @@
 package spending_handlers
 
 import (
+	"database/sql"
 	"net/http"
 	"spending/repositories"
 	"spending/repositories/spending_repo"
@@ -37,19 +38,20 @@ func (handler *deleteSpendingHandler) Handle(writer http.ResponseWriter, request
 		return
 	}
 
-	// Start a new transaction
-	tx, err := handler.unit_of_work.BeginTx()
-	if err != nil {
-		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer handler.unit_of_work.CommitOrRollback(tx, err)
+	status := http.StatusInternalServerError
 
-	err = handler.spending_repo.DeleteSpending(context, tx, spendingUUId)
+	err = handler.unit_of_work.WithTransaction(func(tx *sql.Tx) error {
+		txErr := handler.spending_repo.DeleteSpending(context, tx, spendingUUId)
+		if txErr != nil {
+			status = http.StatusInternalServerError
+			return txErr
+		}
+		return nil
+	})
+
 	if err != nil {
 		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		http.Error(writer, err.Error(), status)
 		return
 	}
 

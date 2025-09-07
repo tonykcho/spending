@@ -2,6 +2,7 @@ package store_handlers
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"net/http"
 	"spending/mappers"
@@ -57,67 +58,63 @@ func (handler *createStoreHandler) Handle(writer http.ResponseWriter, request *h
 		return
 	}
 
-	tx, err := handler.unit_of_work.BeginTx()
-	if err != nil {
-		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer handler.unit_of_work.CommitOrRollback(tx, err)
+	var status int = http.StatusInternalServerError
+	var store *models.Store
 
-	category, err := handler.category_repo.GetCategoryByUUId(context, tx, command.CategoryId)
-	if err != nil {
-		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusBadRequest)
-		return
-	}
+	err = handler.unit_of_work.WithTransaction(func(tx *sql.Tx) error {
+		category, txErr := handler.category_repo.GetCategoryByUUId(context, tx, command.CategoryId)
+		if txErr != nil {
+			status = http.StatusInternalServerError
+			return txErr
+		}
 
-	if category == nil {
-		utils.TraceError(span, fmt.Errorf("category not found"))
-		http.Error(writer, "category not found", http.StatusBadRequest)
-		return
-	}
+		if category == nil {
+			status = http.StatusBadRequest
+			return fmt.Errorf("category not found")
+		}
 
-	existingStore, err := handler.store_repo.GetStoreByCategoryAndName(context, tx, category.Id, command.Name)
+		existingStore, txErr := handler.store_repo.GetStoreByCategoryAndName(context, tx, category.Id, command.Name)
+		if txErr != nil {
+			status = http.StatusInternalServerError
+			return txErr
+		}
 
-	if err != nil {
-		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusBadRequest)
-		return
-	}
+		if existingStore != nil {
+			status = http.StatusBadRequest
+			return fmt.Errorf("store already exists")
+		}
 
-	if existingStore != nil {
-		utils.TraceError(span, fmt.Errorf("store already exists"))
-		http.Error(writer, "store already exists", http.StatusBadRequest)
-		return
-	}
+		newStore := &models.Store{
+			Name:       command.Name,
+			CategoryId: category.Id,
+			CreatedAt:  time.Now(),
+			UpdatedAt:  time.Now(),
+		}
 
-	newStore := &models.Store{
-		Name:       command.Name,
-		CategoryId: category.Id,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
-	}
+		id, txErr := handler.store_repo.InsertStore(context, tx, newStore)
+		if txErr != nil {
+			status = http.StatusInternalServerError
+			return txErr
+		}
 
-	id, err := handler.store_repo.InsertStore(context, tx, newStore)
+		store, txErr = handler.store_repo.GetStoreById(context, tx, id)
 
-	if err != nil {
-		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
-		return
-	}
+		if txErr != nil {
+			status = http.StatusInternalServerError
+			return txErr
+		}
 
-	createdStore, err := handler.store_repo.GetStoreById(context, tx, id)
+		return nil
+	})
 
 	if err != nil {
 		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		http.Error(writer, err.Error(), status)
 		return
 	}
 
 	writer.WriteHeader(http.StatusCreated)
-	response := mappers.MapStore(createdStore)
-
+	response := mappers.MapStore(store)
 	err = utils.Encode(context, writer, http.StatusCreated, response)
 	utils.TraceError(span, err)
 }

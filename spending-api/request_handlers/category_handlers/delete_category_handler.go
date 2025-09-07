@@ -1,6 +1,7 @@
 package category_handlers
 
 import (
+	"database/sql"
 	"net/http"
 	"spending/repositories"
 	"spending/repositories/category_repo"
@@ -37,20 +38,21 @@ func (handler *deleteCategoryHandler) Handle(writer http.ResponseWriter, request
 		return
 	}
 
-	// Start a new transaction
-	tx, err := handler.unit_of_work.BeginTx()
+	status := http.StatusInternalServerError
+
+	err = handler.unit_of_work.WithTransaction(func(tx *sql.Tx) error {
+		txErr := handler.category_repo.DeleteCategory(context, nil, categoryUUId)
+		if txErr != nil {
+			status = http.StatusInternalServerError
+			return txErr
+		}
+
+		return nil
+	})
+
 	if err != nil {
 		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusBadRequest)
-		return
-	}
-	defer handler.unit_of_work.CommitOrRollback(tx, err)
-
-	err = handler.category_repo.DeleteCategory(context, tx, categoryUUId)
-
-	if err != nil {
-		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		http.Error(writer, err.Error(), status)
 		return
 	}
 

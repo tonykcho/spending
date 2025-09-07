@@ -2,6 +2,7 @@ package category_handlers
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"net/http"
 	"spending/mappers"
@@ -40,67 +41,62 @@ func (request CreateCategoryRequest) Valid(context context.Context) error {
 
 func (handler *createCategoryHandler) Handle(writer http.ResponseWriter, request *http.Request) {
 	tracer := otel.Tracer("spending-api")
-	context, span := tracer.Start(request.Context(), "CreateCategoryHandler")
+	ctx, span := tracer.Start(request.Context(), "CreateCategoryHandler")
 	defer span.End()
 
 	// Parse the request body into CreateCategoryRequest struct
-	command, err := utils.DecodeValid[CreateCategoryRequest](context, request)
+	command, err := utils.DecodeValid[CreateCategoryRequest](ctx, request)
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Start a new transaction
-	tx, err := handler.unit_of_work.BeginTx()
-	if err != nil {
-		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusBadRequest)
-		return
-	}
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-		} else {
-			tx.Commit()
+	var category *models.Category
+	var status int = http.StatusInternalServerError
+
+	err = handler.unit_of_work.WithTransaction(func(tx *sql.Tx) error {
+		existingCategory, txErr := handler.category_repo.GetCategoryByName(ctx, tx, command.Name)
+		if txErr != nil {
+			status = http.StatusInternalServerError
+			return txErr
 		}
-	}()
 
-	existingCategory, err := handler.category_repo.GetCategoryByName(context, tx, command.Name)
+		if existingCategory != nil {
+			txErr = fmt.Errorf("category already exists")
+			status = http.StatusConflict
+			return txErr
+		}
+
+		newCategory := models.Category{
+			Name:      command.Name,
+			CreatedAt: time.Now().UTC(),
+			UpdatedAt: time.Now().UTC(),
+		}
+
+		id, txErr := handler.category_repo.InsertCategory(ctx, tx, newCategory)
+		if txErr != nil {
+			status = http.StatusInternalServerError
+			return txErr
+		}
+
+		category, txErr = handler.category_repo.GetCategoryById(ctx, tx, id)
+		if txErr != nil {
+			status = http.StatusInternalServerError
+			return txErr
+		}
+
+		return nil
+	})
+
 	if err != nil {
 		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	if existingCategory != nil {
-		err = fmt.Errorf("category already exists")
-		utils.TraceError(span, fmt.Errorf("category already exists"))
-		http.Error(writer, "Category already exists", http.StatusConflict)
-		return
-	}
-
-	newCategory := models.Category{
-		Name:      command.Name,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-
-	id, err := handler.category_repo.InsertCategory(context, tx, newCategory)
-	if err != nil {
-		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	category, err := handler.category_repo.GetCategoryById(context, tx, id)
-	if err != nil {
-		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusBadRequest)
+		http.Error(writer, err.Error(), status)
 		return
 	}
 
 	response := mappers.MapCategory(category)
-	err = utils.Encode(context, writer, http.StatusCreated, response)
+	writer.Header().Set("Location", fmt.Sprintf("/categories/%s", category.UUId))
+	err = utils.Encode(ctx, writer, http.StatusCreated, response)
 	utils.TraceError(span, err)
 }

@@ -2,6 +2,7 @@ package category_handlers
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"net/http"
 	"spending/repositories"
@@ -31,6 +32,13 @@ type UpdateCategoryRequest struct {
 	Name string `json:"name"`
 }
 
+func (request UpdateCategoryRequest) Valid(context context.Context) error {
+	if request.Name == "" {
+		return fmt.Errorf("name cannot be empty")
+	}
+	return nil
+}
+
 func (handler *updateCategoryHandler) Handle(writer http.ResponseWriter, request *http.Request) {
 	tracer := otel.Tracer("spending-api")
 	context, span := tracer.Start(request.Context(), "UpdateCategoryHandler")
@@ -51,51 +59,49 @@ func (handler *updateCategoryHandler) Handle(writer http.ResponseWriter, request
 		return
 	}
 
-	// Start a new transaction
-	tx, err := handler.unit_of_work.BeginTx()
+	status := http.StatusInternalServerError
+
+	err = handler.unit_of_work.WithTransaction(func(tx *sql.Tx) error {
+		existingCategory, txErr := handler.category_repo.GetCategoryByName(context, tx, command.Name)
+		if txErr != nil {
+			status = http.StatusInternalServerError
+			return txErr
+		}
+
+		if existingCategory != nil && existingCategory.UUId != categoryUUId {
+			txErr = fmt.Errorf("category with name %s already exists", command.Name)
+			status = http.StatusConflict
+			return txErr
+		}
+
+		category, txErr := handler.category_repo.GetCategoryByUUId(context, tx, categoryUUId)
+		if txErr != nil {
+			status = http.StatusInternalServerError
+			return txErr
+		}
+
+		if category == nil {
+			txErr = fmt.Errorf("category not found")
+			status = http.StatusNotFound
+			return txErr
+		}
+
+		category.Name = command.Name
+		category.UpdatedAt = time.Now()
+		txErr = handler.category_repo.UpdateCategory(context, tx, category)
+		if txErr != nil {
+			status = http.StatusInternalServerError
+			return txErr
+		}
+
+		return nil
+	})
+
 	if err != nil {
 		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusBadRequest)
+		http.Error(writer, err.Error(), status)
 		return
 	}
-	defer handler.unit_of_work.CommitOrRollback(tx, err)
-
-	existingCategory, err := handler.category_repo.GetCategoryByName(context, tx, command.Name)
-	if err != nil {
-		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	if existingCategory != nil && existingCategory.UUId != categoryUUId {
-		utils.TraceError(span, fmt.Errorf("category already exists"))
-		http.Error(writer, "Category already exists", http.StatusConflict)
-		return
-	}
-
-	category, err := handler.category_repo.GetCategoryByUUId(context, tx, categoryUUId)
-	if err != nil {
-		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	if category == nil {
-		utils.TraceError(span, fmt.Errorf("category not found"))
-		http.Error(writer, "Category not found", http.StatusNotFound)
-		return
-	}
-
-	category.Name = command.Name
-	category.UpdatedAt = time.Now()
-	handler.category_repo.UpdateCategory(context, tx, category)
 
 	writer.WriteHeader(http.StatusNoContent)
-}
-
-func (request UpdateCategoryRequest) Valid(context context.Context) error {
-	if request.Name == "" {
-		return fmt.Errorf("name cannot be empty")
-	}
-	return nil
 }

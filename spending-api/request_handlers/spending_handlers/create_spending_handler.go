@@ -2,6 +2,7 @@ package spending_handlers
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"net/http"
 	"spending/mappers"
@@ -65,54 +66,56 @@ func (handler *createSpendingHandler) Handle(writer http.ResponseWriter, request
 		return
 	}
 
-	tx, err := handler.unit_of_work.BeginTx()
+	status := http.StatusInternalServerError
+	var spending *models.SpendingRecord
+
+	err = handler.unit_of_work.WithTransaction(func(tx *sql.Tx) error {
+		category, txErr := handler.category_repo.GetCategoryByUUId(context, tx, command.CategoryId)
+		if txErr != nil {
+			status = http.StatusInternalServerError
+			return txErr
+		}
+
+		if category == nil {
+			txErr := fmt.Errorf("category not found")
+			status = http.StatusBadRequest
+			return txErr
+		}
+
+		// Create a SpendingRecord from the request
+		newSpending := models.SpendingRecord{
+			Amount:       command.Amount,
+			Remark:       command.Remark,
+			SpendingDate: command.SpendingDate,
+			CategoryId:   category.Id,
+			CreatedAt:    time.Now().UTC(),
+			UpdatedAt:    time.Now().UTC(),
+		}
+
+		// Insert the record into the database
+		id, txErr := handler.spending_repo.InsertSpendingRecord(context, tx, newSpending)
+		if txErr != nil {
+			status = http.StatusInternalServerError
+			return txErr
+		}
+
+		spending, txErr = handler.spending_repo.GetSpendingById(context, tx, id)
+		if txErr != nil {
+			status = http.StatusInternalServerError
+			return txErr
+		}
+
+		return nil
+	})
+
 	if err != nil {
 		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer handler.unit_of_work.CommitOrRollback(tx, err)
-
-	category, err := handler.category_repo.GetCategoryByUUId(context, tx, command.CategoryId)
-	if err != nil {
-		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusBadRequest)
+		http.Error(writer, err.Error(), status)
 		return
 	}
 
-	if category == nil {
-		utils.TraceError(span, fmt.Errorf("category not found"))
-		http.Error(writer, "category not found", http.StatusBadRequest)
-		return
-	}
-
-	// Create a SpendingRecord from the request
-	newSpending := models.SpendingRecord{
-		Amount:       command.Amount,
-		Remark:       command.Remark,
-		SpendingDate: command.SpendingDate,
-		CategoryId:   category.Id,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
-	}
-
-	// Insert the record into the database
-	id, err := handler.spending_repo.InsertSpendingRecord(context, tx, newSpending)
-	if err != nil {
-		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	spending, err := handler.spending_repo.GetSpendingById(context, tx, id)
-	if err != nil {
-		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
-		return
-	}
 	response := mappers.MapSpending(spending)
-
-	// Return 201 created response
+	writer.Header().Set("Location", fmt.Sprintf("/spending/%s", spending.UUId))
 	err = utils.Encode(context, writer, http.StatusCreated, response)
 	utils.TraceError(span, err)
 }
