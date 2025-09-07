@@ -91,14 +91,7 @@ func (handler *createStoreHandler) Handle(writer http.ResponseWriter, request *h
 			UpdatedAt:  time.Now(),
 		}
 
-		id, txErr := handler.store_repo.InsertStore(context, tx, newStore)
-		if txErr != nil {
-			status = http.StatusInternalServerError
-			return txErr
-		}
-
-		store, txErr = handler.store_repo.GetStoreById(context, tx, id)
-
+		store, txErr = handler.store_repo.InsertStore(context, tx, newStore)
 		if txErr != nil {
 			status = http.StatusInternalServerError
 			return txErr

@@ -93,13 +93,7 @@ func (handler *createSpendingHandler) Handle(writer http.ResponseWriter, request
 		}
 
 		// Insert the record into the database
-		id, txErr := handler.spending_repo.InsertSpendingRecord(context, tx, newSpending)
-		if txErr != nil {
-			status = http.StatusInternalServerError
-			return txErr
-		}
-
-		spending, txErr = handler.spending_repo.GetSpendingById(context, tx, id)
+		spending, txErr = handler.spending_repo.InsertSpendingRecord(context, tx, newSpending)
 		if txErr != nil {
 			status = http.StatusInternalServerError
 			return txErr

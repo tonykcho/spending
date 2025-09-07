@@ -10,7 +10,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func (repo *categoryRepository) InsertCategory(context context.Context, tx *sql.Tx, category models.Category) (int, error) {
+func (repo *categoryRepository) InsertCategory(context context.Context, tx *sql.Tx, category models.Category) (*models.Category, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:InsertCategory")
 	defer span.End()
@@ -21,7 +21,12 @@ func (repo *categoryRepository) InsertCategory(context context.Context, tx *sql.
 		created_at,
 		updated_at
 	) Values ($1, $2, $3)
-		RETURNING id
+		RETURNING
+			id,
+			uuid,
+			name,
+			created_at,
+			updated_at
 	`
 
 	var dbTx repositories.DbTx = repo.db
@@ -29,9 +34,12 @@ func (repo *categoryRepository) InsertCategory(context context.Context, tx *sql.
 		dbTx = tx
 	}
 
-	var id int
-	err := dbTx.QueryRowContext(context, query, category.Name, category.CreatedAt, category.UpdatedAt).Scan(&id)
+	var dbQuery = func() (*sql.Rows, error) {
+		return dbTx.QueryContext(context, query)
+	}
+
+	newCategory, err := repositories.Query(span, dbQuery, readCategory)
 
 	utils.TraceError(span, err)
-	return id, err
+	return newCategory, err
 }

@@ -11,7 +11,7 @@ Content-Type: application/json
 
 {
   "amount": 20,
-  "remark": "Sugar",
+  "remark": "Salt",
   "spending_date": "2023-10-01T00:00:00Z",
   "category_id": "f653fceb-f5f4-465d-95ab-dc383232a2a5"
 }

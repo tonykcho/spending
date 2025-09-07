@@ -10,7 +10,7 @@ import (
 )
 
 type SpendingRepository interface {
-	InsertSpendingRecord(context context.Context, tx *sql.Tx, record models.SpendingRecord) (int, error)
+	InsertSpendingRecord(context context.Context, tx *sql.Tx, record models.SpendingRecord) (*models.SpendingRecord, error)
 	GetSpendingById(context context.Context, tx *sql.Tx, id int) (*models.SpendingRecord, error)
 	GetSpendingByUUId(context context.Context, tx *sql.Tx, uuid uuid.UUID) (*models.SpendingRecord, error)
 	GetSpendingList(context context.Context, tx *sql.Tx) ([]*models.SpendingRecord, error)

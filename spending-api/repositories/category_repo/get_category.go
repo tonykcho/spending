@@ -13,9 +13,9 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func (repo *categoryRepository) GetCategoryById(context context.Context, tx *sql.Tx, id int) (*models.Category, error) {
+func (repo *categoryRepository) GetCategoryById(ctx context.Context, tx *sql.Tx, id int) (*models.Category, error) {
 	tracer := otel.Tracer("spending-api")
-	_, span := tracer.Start(context, "DB:GetCategoryById")
+	_, span := tracer.Start(ctx, "DB:GetCategoryById")
 	defer span.End()
 
 	query := `
@@ -36,7 +36,7 @@ func (repo *categoryRepository) GetCategoryById(context context.Context, tx *sql
 	}
 
 	var dbQuery = func() (*sql.Rows, error) {
-		return dbTx.Query(query, id)
+		return dbTx.QueryContext(ctx, query, id)
 	}
 
 	category, err := repositories.Query(span, dbQuery, readCategory)
@@ -44,9 +44,9 @@ func (repo *categoryRepository) GetCategoryById(context context.Context, tx *sql
 	return category, err
 }
 
-func (repo *categoryRepository) GetCategoryByUUId(context context.Context, tx *sql.Tx, uuid uuid.UUID) (*models.Category, error) {
+func (repo *categoryRepository) GetCategoryByUUId(ctx context.Context, tx *sql.Tx, uuid uuid.UUID) (*models.Category, error) {
 	tracer := otel.Tracer("spending-api")
-	_, span := tracer.Start(context, "DB:GetCategoryByUUId")
+	_, span := tracer.Start(ctx, "DB:GetCategoryByUUId")
 	defer span.End()
 
 	query := `
@@ -67,7 +67,7 @@ func (repo *categoryRepository) GetCategoryByUUId(context context.Context, tx *s
 	}
 
 	dbQuery := func() (*sql.Rows, error) {
-		return dbTx.Query(query, uuid)
+		return dbTx.QueryContext(ctx, query, uuid)
 	}
 
 	category, err := repositories.Query(span, dbQuery, readCategory)

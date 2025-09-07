@@ -74,13 +74,7 @@ func (handler *createCategoryHandler) Handle(writer http.ResponseWriter, request
 			UpdatedAt: time.Now().UTC(),
 		}
 
-		id, txErr := handler.category_repo.InsertCategory(ctx, tx, newCategory)
-		if txErr != nil {
-			status = http.StatusInternalServerError
-			return txErr
-		}
-
-		category, txErr = handler.category_repo.GetCategoryById(ctx, tx, id)
+		category, txErr = handler.category_repo.InsertCategory(ctx, tx, newCategory)
 		if txErr != nil {
 			status = http.StatusInternalServerError
 			return txErr

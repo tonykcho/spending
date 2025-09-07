@@ -10,7 +10,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func (repo *spendingRepository) InsertSpendingRecord(ctx context.Context, tx *sql.Tx, record models.SpendingRecord) (int, error) {
+func (repo *spendingRepository) InsertSpendingRecord(ctx context.Context, tx *sql.Tx, record models.SpendingRecord) (*models.SpendingRecord, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(ctx, "DB:InsertSpendingRecord")
 	defer span.End()
@@ -25,7 +25,15 @@ func (repo *spendingRepository) InsertSpendingRecord(ctx context.Context, tx *sq
 		created_at,
 		updated_at
 	) VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id
+		RETURNING
+			id,
+			uuid,
+			amount,
+			remark,
+			spending_date,
+			category_id,
+			created_at,
+			updated_at
 	`
 
 	var dbTx repositories.DbTx = repo.db
@@ -33,16 +41,19 @@ func (repo *spendingRepository) InsertSpendingRecord(ctx context.Context, tx *sq
 		dbTx = tx
 	}
 
-	var id int
-	err := dbTx.QueryRowContext(ctx, query,
-		record.Amount,
-		record.Remark,
-		record.SpendingDate,
-		record.CategoryId,
-		record.CreatedAt,
-		record.UpdatedAt,
-	).Scan(&id)
+	dbQuery := func() (*sql.Rows, error) {
+		return dbTx.QueryContext(ctx, query,
+			record.Amount,
+			record.Remark,
+			record.SpendingDate,
+			record.CategoryId,
+			record.CreatedAt,
+			record.UpdatedAt,
+		)
+	}
+
+	newRecord, err := repositories.Query(span, dbQuery, readSpendingRecord)
 
 	utils.TraceError(span, err)
-	return id, err
+	return newRecord, err
 }
