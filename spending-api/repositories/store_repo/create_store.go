@@ -2,14 +2,16 @@ package store_repo
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"spending/models"
+	"spending/repositories"
 	"spending/utils"
 
 	"go.opentelemetry.io/otel"
 )
 
-func (repo *storeRepository) InsertStore(ctx context.Context, store *models.Store) (int, error) {
+func (repo *storeRepository) InsertStore(ctx context.Context, tx *sql.Tx, store *models.Store) (int, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(ctx, "DB:InsertStore")
 	defer span.End()
@@ -26,8 +28,13 @@ func (repo *storeRepository) InsertStore(ctx context.Context, store *models.Stor
 			) Values ($1, $2, $3, $4)
 			 RETURNING id`
 
+	var dbTx repositories.DbTx = repo.db
+	if tx != nil {
+		dbTx = tx
+	}
+
 	var id int
-	err := repo.db.QueryRow(query, store.Name, store.CategoryId, store.CreatedAt, store.UpdatedAt).Scan(&id)
+	err := dbTx.QueryRowContext(ctx, query, store.Name, store.CategoryId, store.CreatedAt, store.UpdatedAt).Scan(&id)
 
 	if err != nil {
 		utils.TraceError(span, err)

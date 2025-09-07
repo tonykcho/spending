@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"spending/mappers"
 	"spending/models"
+	"spending/repositories"
 	"spending/repositories/category_repo"
 	"spending/repositories/store_repo"
 	"spending/utils"
@@ -18,12 +19,14 @@ import (
 type createStoreHandler struct {
 	store_repo    store_repo.StoreRepository
 	category_repo category_repo.CategoryRepository
+	unit_of_work  repositories.UnitOfWork
 }
 
-func NewCreateStoreHandler(storeRepo store_repo.StoreRepository, categoryRepo category_repo.CategoryRepository) *createStoreHandler {
+func NewCreateStoreHandler(storeRepo store_repo.StoreRepository, categoryRepo category_repo.CategoryRepository, unitOfWork repositories.UnitOfWork) *createStoreHandler {
 	return &createStoreHandler{
 		store_repo:    storeRepo,
 		category_repo: categoryRepo,
+		unit_of_work:  unitOfWork,
 	}
 }
 
@@ -48,15 +51,21 @@ func (handler *createStoreHandler) Handle(writer http.ResponseWriter, request *h
 	defer span.End()
 
 	command, err := utils.DecodeValid[CreateStoreRequest](context, request)
-
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	category, err := handler.category_repo.GetCategoryByUUId(context, command.CategoryId)
+	tx, err := handler.unit_of_work.BeginTx()
+	if err != nil {
+		utils.TraceError(span, err)
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer handler.unit_of_work.CommitOrRollback(tx, err)
 
+	category, err := handler.category_repo.GetCategoryByUUId(context, tx, command.CategoryId)
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
@@ -69,7 +78,7 @@ func (handler *createStoreHandler) Handle(writer http.ResponseWriter, request *h
 		return
 	}
 
-	existingStore, err := handler.store_repo.GetStoreByCategoryAndName(context, category.Id, command.Name)
+	existingStore, err := handler.store_repo.GetStoreByCategoryAndName(context, tx, category.Id, command.Name)
 
 	if err != nil {
 		utils.TraceError(span, err)
@@ -90,7 +99,7 @@ func (handler *createStoreHandler) Handle(writer http.ResponseWriter, request *h
 		UpdatedAt:  time.Now(),
 	}
 
-	id, err := handler.store_repo.InsertStore(context, newStore)
+	id, err := handler.store_repo.InsertStore(context, tx, newStore)
 
 	if err != nil {
 		utils.TraceError(span, err)
@@ -98,7 +107,7 @@ func (handler *createStoreHandler) Handle(writer http.ResponseWriter, request *h
 		return
 	}
 
-	createdStore, err := handler.store_repo.GetStoreById(context, id)
+	createdStore, err := handler.store_repo.GetStoreById(context, tx, id)
 
 	if err != nil {
 		utils.TraceError(span, err)

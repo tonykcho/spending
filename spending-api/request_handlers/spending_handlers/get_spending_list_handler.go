@@ -27,7 +27,7 @@ func (handler *getSpendingListHandler) Handle(writer http.ResponseWriter, reques
 	defer span.End()
 
 	log.Info().Msg("Fetching spending list...")
-	records, err := handler.spending_repo.GetSpendingList(context)
+	records, err := handler.spending_repo.GetSpendingList(context, nil)
 
 	if err != nil {
 		utils.TraceError(span, err)
@@ -35,7 +35,7 @@ func (handler *getSpendingListHandler) Handle(writer http.ResponseWriter, reques
 		return
 	}
 
-	err = handler.spending_repo.LoadSpendingListCategory(context, records)
+	err = handler.spending_repo.LoadSpendingListCategory(context, nil, records)
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusInternalServerError)

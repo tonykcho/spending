@@ -2,13 +2,15 @@ package store_repo
 
 import (
 	"context"
+	"database/sql"
+	"spending/repositories"
 	"spending/utils"
 
 	"github.com/google/uuid"
 	"go.opentelemetry.io/otel"
 )
 
-func (repo *storeRepository) DeleteStore(ctx context.Context, uuid uuid.UUID) error {
+func (repo *storeRepository) DeleteStore(ctx context.Context, tx *sql.Tx, uuid uuid.UUID) error {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(ctx, "DB:DeleteStore")
 	defer span.End()
@@ -19,7 +21,12 @@ func (repo *storeRepository) DeleteStore(ctx context.Context, uuid uuid.UUID) er
 		WHERE uuid = $1
 	`
 
-	_, err := repo.db.Exec(query, uuid)
+	var dbTx repositories.DbTx = repo.db
+	if tx != nil {
+		dbTx = tx
+	}
+
+	_, err := dbTx.ExecContext(ctx, query, uuid)
 	utils.TraceError(span, err)
 	return err
 }

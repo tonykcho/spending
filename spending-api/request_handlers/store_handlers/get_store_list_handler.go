@@ -25,7 +25,7 @@ func (handler *getStoreListHandler) Handle(writer http.ResponseWriter, request *
 	context, span := tracer.Start(request.Context(), "GetStoreListHandler")
 	defer span.End()
 
-	stores, err := handler.store_repo.GetStoreList(context)
+	stores, err := handler.store_repo.GetStoreList(context, nil)
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)

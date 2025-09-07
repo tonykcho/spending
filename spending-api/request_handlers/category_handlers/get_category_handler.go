@@ -32,7 +32,7 @@ func (handler *getCategoryHandler) Handle(writer http.ResponseWriter, request *h
 	categoryUUId, err := uuid.Parse(routerVars["id"])
 	utils.TraceError(span, err)
 
-	category, err := handler.category_repo.GetCategoryByUUId(context, categoryUUId)
+	category, err := handler.category_repo.GetCategoryByUUId(context, nil, categoryUUId)
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)

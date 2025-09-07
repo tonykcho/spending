@@ -2,6 +2,7 @@ package category_handlers
 
 import (
 	"net/http"
+	"spending/repositories"
 	"spending/repositories/category_repo"
 	"spending/request_handlers"
 	"spending/utils"
@@ -13,11 +14,13 @@ import (
 
 type deleteCategoryHandler struct {
 	category_repo category_repo.CategoryRepository
+	unit_of_work  repositories.UnitOfWork
 }
 
-func NewDeleteCategoryHandler(categoryRepo category_repo.CategoryRepository) request_handlers.RequestHandler {
+func NewDeleteCategoryHandler(categoryRepo category_repo.CategoryRepository, unitOfWork repositories.UnitOfWork) request_handlers.RequestHandler {
 	return &deleteCategoryHandler{
 		category_repo: categoryRepo,
+		unit_of_work:  unitOfWork,
 	}
 }
 
@@ -28,15 +31,22 @@ func (handler *deleteCategoryHandler) Handle(writer http.ResponseWriter, request
 
 	routerVars := mux.Vars(request)
 	categoryUUId, err := uuid.Parse(routerVars["id"])
-	utils.TraceError(span, err)
-
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = handler.category_repo.DeleteCategory(context, categoryUUId)
+	// Start a new transaction
+	tx, err := handler.unit_of_work.BeginTx()
+	if err != nil {
+		utils.TraceError(span, err)
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer handler.unit_of_work.CommitOrRollback(tx, err)
+
+	err = handler.category_repo.DeleteCategory(context, tx, categoryUUId)
 
 	if err != nil {
 		utils.TraceError(span, err)

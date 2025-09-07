@@ -34,7 +34,7 @@ func (handler *getStoreHandler) Handle(writer http.ResponseWriter, request *http
 		return
 	}
 
-	store, err := handler.store_repo.GetStoreByUUId(ctx, storeUUId)
+	store, err := handler.store_repo.GetStoreByUUId(ctx, nil, storeUUId)
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusInternalServerError)

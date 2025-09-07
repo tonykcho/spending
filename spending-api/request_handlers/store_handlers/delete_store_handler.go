@@ -2,6 +2,7 @@ package store_handlers
 
 import (
 	"net/http"
+	"spending/repositories"
 	"spending/repositories/store_repo"
 	"spending/utils"
 
@@ -11,12 +12,14 @@ import (
 )
 
 type deleteStoreHandler struct {
-	store_repo store_repo.StoreRepository
+	store_repo   store_repo.StoreRepository
+	unit_of_work repositories.UnitOfWork
 }
 
-func NewDeleteStoreHandler(storeRepo store_repo.StoreRepository) *deleteStoreHandler {
+func NewDeleteStoreHandler(storeRepo store_repo.StoreRepository, unitOfWork repositories.UnitOfWork) *deleteStoreHandler {
 	return &deleteStoreHandler{
-		store_repo: storeRepo,
+		store_repo:   storeRepo,
+		unit_of_work: unitOfWork,
 	}
 }
 
@@ -34,7 +37,16 @@ func (handler *deleteStoreHandler) Handle(writer http.ResponseWriter, request *h
 		return
 	}
 
-	err = handler.store_repo.DeleteStore(ctx, storeUUId)
+	// Start a new transaction
+	tx, err := handler.unit_of_work.BeginTx()
+	if err != nil {
+		utils.TraceError(span, err)
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer handler.unit_of_work.CommitOrRollback(tx, err)
+
+	err = handler.store_repo.DeleteStore(ctx, tx, storeUUId)
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusInternalServerError)

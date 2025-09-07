@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"spending/data_access"
+	"spending/repositories"
 	"spending/repositories/category_repo"
 	"spending/repositories/spending_repo"
 	"spending/repositories/store_repo"
@@ -34,6 +35,7 @@ type Container struct {
 	CategoryRepository category_repo.CategoryRepository
 	SpendingRepository spending_repo.SpendingRepository
 	StoreRepository    store_repo.StoreRepository
+	UnitOfWork         repositories.UnitOfWork
 
 	CreateCategoryHandler  request_handlers.RequestHandler
 	DeleteCategoryHandler  request_handlers.RequestHandler
@@ -56,25 +58,27 @@ func NewContainer(db *sql.DB) *Container {
 	categoryRepo := category_repo.NewCategoryRepository(db)
 	spendingRepo := spending_repo.NewSpendingRepository(db)
 	storeRepo := store_repo.NewStoreRepository(db)
+	unitOfWork := repositories.NewUnitOfWork(db)
 
 	return &Container{
 		CategoryRepository: categoryRepo,
 		SpendingRepository: spendingRepo,
 		StoreRepository:    storeRepo,
+		UnitOfWork:         unitOfWork,
 
-		CreateCategoryHandler:  category_handlers.NewCreateCategoryHandler(categoryRepo),
-		DeleteCategoryHandler:  category_handlers.NewDeleteCategoryHandler(categoryRepo),
+		CreateCategoryHandler:  category_handlers.NewCreateCategoryHandler(categoryRepo, unitOfWork),
+		DeleteCategoryHandler:  category_handlers.NewDeleteCategoryHandler(categoryRepo, unitOfWork),
 		GetCategoryHandler:     category_handlers.NewGetCategoryHandler(categoryRepo),
 		GetCategoryListHandler: category_handlers.NewGetCategoryListHandler(categoryRepo),
-		UpdateCategoryHandler:  category_handlers.NewUpdateCategoryHandler(categoryRepo),
+		UpdateCategoryHandler:  category_handlers.NewUpdateCategoryHandler(categoryRepo, unitOfWork),
 
-		CreateSpendingHandler:  spending_handlers.NewCreateSpendingHandler(spendingRepo, categoryRepo),
+		CreateSpendingHandler:  spending_handlers.NewCreateSpendingHandler(spendingRepo, categoryRepo, unitOfWork),
 		GetSpendingHandler:     spending_handlers.NewGetSpendingHandler(spendingRepo),
 		GetSpendingListHandler: spending_handlers.NewGetSpendingListHandler(spendingRepo),
-		DeleteSpendingHandler:  spending_handlers.NewDeleteSpendingHandler(spendingRepo),
+		DeleteSpendingHandler:  spending_handlers.NewDeleteSpendingHandler(spendingRepo, unitOfWork),
 
-		CreateStoreHandler:  store_handlers.NewCreateStoreHandler(storeRepo, categoryRepo),
-		DeleteStoreHandler:  store_handlers.NewDeleteStoreHandler(storeRepo),
+		CreateStoreHandler:  store_handlers.NewCreateStoreHandler(storeRepo, categoryRepo, unitOfWork),
+		DeleteStoreHandler:  store_handlers.NewDeleteStoreHandler(storeRepo, unitOfWork),
 		GetStoreHandler:     store_handlers.NewGetStoreHandler(storeRepo),
 		GetStoreListHandler: store_handlers.NewGetStoreListHandler(storeRepo),
 	}

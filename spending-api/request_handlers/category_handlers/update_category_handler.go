@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"spending/repositories"
 	"spending/repositories/category_repo"
 	"spending/request_handlers"
 	"spending/utils"
@@ -16,11 +17,13 @@ import (
 
 type updateCategoryHandler struct {
 	category_repo category_repo.CategoryRepository
+	unit_of_work  repositories.UnitOfWork
 }
 
-func NewUpdateCategoryHandler(categoryRepo category_repo.CategoryRepository) request_handlers.RequestHandler {
+func NewUpdateCategoryHandler(categoryRepo category_repo.CategoryRepository, unitOfWork repositories.UnitOfWork) request_handlers.RequestHandler {
 	return &updateCategoryHandler{
 		category_repo: categoryRepo,
+		unit_of_work:  unitOfWork,
 	}
 }
 
@@ -42,14 +45,22 @@ func (handler *updateCategoryHandler) Handle(writer http.ResponseWriter, request
 	}
 
 	command, err := utils.DecodeValid[UpdateCategoryRequest](context, request)
-
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	existingCategory, err := handler.category_repo.GetCategoryByName(context, command.Name)
+	// Start a new transaction
+	tx, err := handler.unit_of_work.BeginTx()
+	if err != nil {
+		utils.TraceError(span, err)
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer handler.unit_of_work.CommitOrRollback(tx, err)
+
+	existingCategory, err := handler.category_repo.GetCategoryByName(context, tx, command.Name)
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
@@ -62,7 +73,7 @@ func (handler *updateCategoryHandler) Handle(writer http.ResponseWriter, request
 		return
 	}
 
-	category, err := handler.category_repo.GetCategoryByUUId(context, categoryUUId)
+	category, err := handler.category_repo.GetCategoryByUUId(context, tx, categoryUUId)
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
@@ -77,7 +88,7 @@ func (handler *updateCategoryHandler) Handle(writer http.ResponseWriter, request
 
 	category.Name = command.Name
 	category.UpdatedAt = time.Now()
-	handler.category_repo.UpdateCategory(context, category)
+	handler.category_repo.UpdateCategory(context, tx, category)
 
 	writer.WriteHeader(http.StatusNoContent)
 }

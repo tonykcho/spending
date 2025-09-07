@@ -25,7 +25,7 @@ func (handler *getCategoryListHandler) Handle(writer http.ResponseWriter, reques
 	context, span := tracer.Start(request.Context(), "GetCategoryListHandler")
 	defer span.End()
 
-	categories, err := handler.category_repo.GetCategoryList(context)
+	categories, err := handler.category_repo.GetCategoryList(context, nil)
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)

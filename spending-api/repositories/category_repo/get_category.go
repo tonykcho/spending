@@ -13,7 +13,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func (repo *categoryRepository) GetCategoryById(context context.Context, id int) (*models.Category, error) {
+func (repo *categoryRepository) GetCategoryById(context context.Context, tx *sql.Tx, id int) (*models.Category, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetCategoryById")
 	defer span.End()
@@ -30,8 +30,13 @@ func (repo *categoryRepository) GetCategoryById(context context.Context, id int)
 		AND is_deleted = FALSE
 	`
 
+	var dbTx repositories.DbTx = repo.db
+	if tx != nil {
+		dbTx = tx
+	}
+
 	var dbQuery = func() (*sql.Rows, error) {
-		return repo.db.Query(query, id)
+		return dbTx.Query(query, id)
 	}
 
 	category, err := repositories.Query(span, dbQuery, readCategory)
@@ -39,7 +44,7 @@ func (repo *categoryRepository) GetCategoryById(context context.Context, id int)
 	return category, err
 }
 
-func (repo *categoryRepository) GetCategoryByUUId(context context.Context, uuid uuid.UUID) (*models.Category, error) {
+func (repo *categoryRepository) GetCategoryByUUId(context context.Context, tx *sql.Tx, uuid uuid.UUID) (*models.Category, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetCategoryByUUId")
 	defer span.End()
@@ -56,8 +61,13 @@ func (repo *categoryRepository) GetCategoryByUUId(context context.Context, uuid 
 		AND is_deleted = FALSE
 	`
 
+	var dbTx repositories.DbTx = repo.db
+	if tx != nil {
+		dbTx = tx
+	}
+
 	dbQuery := func() (*sql.Rows, error) {
-		return repo.db.Query(query, uuid)
+		return dbTx.Query(query, uuid)
 	}
 
 	category, err := repositories.Query(span, dbQuery, readCategory)
@@ -65,7 +75,7 @@ func (repo *categoryRepository) GetCategoryByUUId(context context.Context, uuid 
 	return category, err
 }
 
-func (repo *categoryRepository) GetCategoryByName(context context.Context, name string) (*models.Category, error) {
+func (repo *categoryRepository) GetCategoryByName(context context.Context, tx *sql.Tx, name string) (*models.Category, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetCategoryByName")
 	defer span.End()
@@ -82,8 +92,13 @@ func (repo *categoryRepository) GetCategoryByName(context context.Context, name 
 		AND is_deleted = FALSE
 	`
 
+	var dbTx repositories.DbTx = repo.db
+	if tx != nil {
+		dbTx = tx
+	}
+
 	dbQuery := func() (*sql.Rows, error) {
-		return repo.db.Query(query, name)
+		return dbTx.Query(query, name)
 	}
 
 	category, err := repositories.Query(span, dbQuery, readCategory)
@@ -91,7 +106,7 @@ func (repo *categoryRepository) GetCategoryByName(context context.Context, name 
 	return category, err
 }
 
-func (repo *categoryRepository) GetCategoryList(context context.Context) ([]*models.Category, error) {
+func (repo *categoryRepository) GetCategoryList(context context.Context, tx *sql.Tx) ([]*models.Category, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetCategoryList")
 	defer span.End()
@@ -107,8 +122,13 @@ func (repo *categoryRepository) GetCategoryList(context context.Context) ([]*mod
 		WHERE is_deleted = FALSE
 	`
 
+	var dbTx repositories.DbTx = repo.db
+	if tx != nil {
+		dbTx = tx
+	}
+
 	dbQuery := func() (*sql.Rows, error) {
-		return repo.db.Query(query)
+		return dbTx.Query(query)
 	}
 
 	categories, err := repositories.QueryList(span, dbQuery, readCategory)
@@ -116,7 +136,7 @@ func (repo *categoryRepository) GetCategoryList(context context.Context) ([]*mod
 	return categories, err
 }
 
-func (repo *categoryRepository) GetCategoryListByIds(context context.Context, ids []int) ([]*models.Category, error) {
+func (repo *categoryRepository) GetCategoryListByIds(context context.Context, tx *sql.Tx, ids []int) ([]*models.Category, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetCategoryListByIds")
 	defer span.End()
@@ -141,8 +161,13 @@ func (repo *categoryRepository) GetCategoryListByIds(context context.Context, id
 						  WHERE id IN (%s)
 						  AND is_deleted = FALSE`, strings.Join(placeholders, ","))
 
+	var dbTx repositories.DbTx = repo.db
+	if tx != nil {
+		dbTx = tx
+	}
+
 	dbQuery := func() (*sql.Rows, error) {
-		return repo.db.Query(query, args...)
+		return dbTx.Query(query, args...)
 	}
 
 	categories, err := repositories.QueryList(span, dbQuery, readCategory)

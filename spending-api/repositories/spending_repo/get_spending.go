@@ -11,7 +11,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func (repo *spendingRepository) GetSpendingById(context context.Context, id int) (*models.SpendingRecord, error) {
+func (repo *spendingRepository) GetSpendingById(context context.Context, tx *sql.Tx, id int) (*models.SpendingRecord, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetSpendingById")
 	defer span.End()
@@ -31,8 +31,13 @@ func (repo *spendingRepository) GetSpendingById(context context.Context, id int)
 		AND is_deleted = FALSE
 	`
 
+	var dbTx repositories.DbTx = repo.db
+	if tx != nil {
+		dbTx = tx
+	}
+
 	dbQuery := func() (*sql.Rows, error) {
-		return repo.db.Query(query, id)
+		return dbTx.Query(query, id)
 	}
 
 	record, err := repositories.Query(span, dbQuery, readSpendingRecord)
@@ -40,7 +45,7 @@ func (repo *spendingRepository) GetSpendingById(context context.Context, id int)
 	return record, err
 }
 
-func (repo *spendingRepository) GetSpendingByUUId(context context.Context, uuid uuid.UUID) (*models.SpendingRecord, error) {
+func (repo *spendingRepository) GetSpendingByUUId(context context.Context, tx *sql.Tx, uuid uuid.UUID) (*models.SpendingRecord, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "GetSpendingByUUId")
 	defer span.End()
@@ -60,8 +65,13 @@ func (repo *spendingRepository) GetSpendingByUUId(context context.Context, uuid 
 		AND is_deleted = FALSE
 	`
 
+	var dbTx repositories.DbTx = repo.db
+	if tx != nil {
+		dbTx = tx
+	}
+
 	dbQuery := func() (*sql.Rows, error) {
-		return repo.db.Query(query, uuid)
+		return dbTx.Query(query, uuid)
 	}
 
 	record, err := repositories.Query(span, dbQuery, readSpendingRecord)
@@ -69,7 +79,7 @@ func (repo *spendingRepository) GetSpendingByUUId(context context.Context, uuid 
 	return record, err
 }
 
-func (repo *spendingRepository) GetSpendingList(context context.Context) ([]*models.SpendingRecord, error) {
+func (repo *spendingRepository) GetSpendingList(context context.Context, tx *sql.Tx) ([]*models.SpendingRecord, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetSpendingList")
 	defer span.End()
@@ -89,8 +99,13 @@ func (repo *spendingRepository) GetSpendingList(context context.Context) ([]*mod
 		ORDER BY spending_date DESC
 	`
 
+	var dbTx repositories.DbTx = repo.db
+	if tx != nil {
+		dbTx = tx
+	}
+
 	dbQuery := func() (*sql.Rows, error) {
-		return repo.db.Query(query)
+		return dbTx.Query(query)
 	}
 
 	records, err := repositories.QueryList(span, dbQuery, readSpendingRecord)
@@ -98,12 +113,12 @@ func (repo *spendingRepository) GetSpendingList(context context.Context) ([]*mod
 	return records, err
 }
 
-func (repo *spendingRepository) LoadSpendingCategory(context context.Context, record *models.SpendingRecord) error {
+func (repo *spendingRepository) LoadSpendingCategory(context context.Context, tx *sql.Tx, record *models.SpendingRecord) error {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetSpendingList")
 	defer span.End()
 
-	category, err := repo.category_repo.GetCategoryById(context, record.CategoryId)
+	category, err := repo.category_repo.GetCategoryById(context, tx, record.CategoryId)
 	if err != nil {
 		utils.TraceError(span, err)
 		return err
@@ -113,7 +128,7 @@ func (repo *spendingRepository) LoadSpendingCategory(context context.Context, re
 	return nil
 }
 
-func (repo *spendingRepository) LoadSpendingListCategory(context context.Context, records []*models.SpendingRecord) error {
+func (repo *spendingRepository) LoadSpendingListCategory(context context.Context, tx *sql.Tx, records []*models.SpendingRecord) error {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:GetSpendingList")
 	defer span.End()
@@ -123,7 +138,7 @@ func (repo *spendingRepository) LoadSpendingListCategory(context context.Context
 		categoryIds = append(categoryIds, record.CategoryId)
 	}
 
-	categories, err := repo.category_repo.GetCategoryListByIds(context, categoryIds)
+	categories, err := repo.category_repo.GetCategoryListByIds(context, tx, categoryIds)
 	if err != nil {
 		utils.TraceError(span, err)
 		return err

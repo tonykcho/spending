@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"spending/mappers"
 	"spending/models"
+	"spending/repositories"
 	"spending/repositories/category_repo"
 	"spending/repositories/spending_repo"
 	"spending/request_handlers"
@@ -19,12 +20,14 @@ import (
 type createSpendingHandler struct {
 	spending_repo spending_repo.SpendingRepository
 	category_repo category_repo.CategoryRepository
+	unit_of_work  repositories.UnitOfWork
 }
 
-func NewCreateSpendingHandler(spendingRepo spending_repo.SpendingRepository, categoryRepo category_repo.CategoryRepository) request_handlers.RequestHandler {
+func NewCreateSpendingHandler(spendingRepo spending_repo.SpendingRepository, categoryRepo category_repo.CategoryRepository, unitOfWork repositories.UnitOfWork) request_handlers.RequestHandler {
 	return &createSpendingHandler{
 		spending_repo: spendingRepo,
 		category_repo: categoryRepo,
+		unit_of_work:  unitOfWork,
 	}
 }
 
@@ -56,14 +59,21 @@ func (handler *createSpendingHandler) Handle(writer http.ResponseWriter, request
 
 	// Parse the request body into CreateSpendingRequest struct
 	command, err := utils.DecodeValid[CreateSpendingRequest](context, request)
-
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	category, err := handler.category_repo.GetCategoryByUUId(context, command.CategoryId)
+	tx, err := handler.unit_of_work.BeginTx()
+	if err != nil {
+		utils.TraceError(span, err)
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer handler.unit_of_work.CommitOrRollback(tx, err)
+
+	category, err := handler.category_repo.GetCategoryByUUId(context, tx, command.CategoryId)
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
@@ -87,14 +97,14 @@ func (handler *createSpendingHandler) Handle(writer http.ResponseWriter, request
 	}
 
 	// Insert the record into the database
-	id, err := handler.spending_repo.InsertSpendingRecord(context, newSpending)
+	id, err := handler.spending_repo.InsertSpendingRecord(context, tx, newSpending)
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	spending, err := handler.spending_repo.GetSpendingById(context, id)
+	spending, err := handler.spending_repo.GetSpendingById(context, tx, id)
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
