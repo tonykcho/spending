@@ -8,6 +8,7 @@ import (
 	"spending/utils"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"go.opentelemetry.io/otel"
 )
 
@@ -105,6 +106,78 @@ func (repo *storeRepository) GetStoreByCategoryAndName(ctx context.Context, tx *
 	store, err := repositories.Query(span, dbQuery, readStore)
 
 	return store, err
+}
+
+func (repo *storeRepository) GetStoresByCategoryId(ctx context.Context, tx *sql.Tx, categoryId int) ([]*models.Store, error) {
+	tracer := otel.Tracer("spending-api")
+	_, span := tracer.Start(ctx, "DB:GetStoresByCategoryId")
+	defer span.End()
+
+	query := `
+		SELECT
+			id,
+			uuid,
+			name,
+			category_id,
+			created_at,
+			updated_at
+		FROM stores
+		WHERE category_id = $1
+		AND is_deleted = FALSE
+	`
+
+	var dbTx repositories.DbTx = repo.db
+	if tx != nil {
+		dbTx = tx
+	}
+
+	dbQuery := func() (*sql.Rows, error) {
+		return dbTx.QueryContext(ctx, query, categoryId)
+	}
+
+	stores, err := repositories.QueryList(span, dbQuery, readStore)
+
+	return stores, err
+}
+
+func (repo *storeRepository) GetStoresByCategoryIds(ctx context.Context, tx *sql.Tx, categoryIds []int) (map[int][]*models.Store, error) {
+	tracer := otel.Tracer("spending-api")
+	_, span := tracer.Start(ctx, "DB:GetStoresByCategoryIds")
+	defer span.End()
+
+	query := `
+		SELECT
+			id,
+			uuid,
+			name,
+			category_id,
+			created_at,
+			updated_at
+		FROM stores
+		WHERE category_id = ANY($1)
+		AND is_deleted = FALSE
+	`
+
+	var dbTx repositories.DbTx = repo.db
+	if tx != nil {
+		dbTx = tx
+	}
+
+	dbQuery := func() (*sql.Rows, error) {
+		return dbTx.QueryContext(ctx, query, pq.Array(categoryIds))
+	}
+
+	stores, err := repositories.QueryList(span, dbQuery, readStore)
+	if err != nil {
+		return nil, err
+	}
+
+	storeMap := make(map[int][]*models.Store)
+	for _, store := range stores {
+		storeMap[store.CategoryId] = append(storeMap[store.CategoryId], store)
+	}
+
+	return storeMap, nil
 }
 
 func (repo *storeRepository) GetStoreList(ctx context.Context, tx *sql.Tx) ([]*models.Store, error) {

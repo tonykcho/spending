@@ -14,6 +14,8 @@ type StoreRepository interface {
 	GetStoreById(context context.Context, tx *sql.Tx, id int) (*models.Store, error)
 	GetStoreByUUId(ctx context.Context, tx *sql.Tx, uuid uuid.UUID) (*models.Store, error)
 	GetStoreByCategoryAndName(ctx context.Context, tx *sql.Tx, categoryId int, name string) (*models.Store, error)
+	GetStoresByCategoryId(ctx context.Context, tx *sql.Tx, categoryId int) ([]*models.Store, error)
+	GetStoresByCategoryIds(ctx context.Context, tx *sql.Tx, categoryIds []int) (map[int][]*models.Store, error)
 	GetStoreList(ctx context.Context, tx *sql.Tx) ([]*models.Store, error)
 }
 

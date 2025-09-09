@@ -37,6 +37,7 @@ const CategoryModal = forwardRef<CategoryModalRef, CategoryModalProps>((props, r
     function closeModal()
     {
         setIsOpen(false);
+        setFormData({ uuid: null, name: "" });
     }
 
     useImperativeHandle(ref, () => ({

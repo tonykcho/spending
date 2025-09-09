@@ -55,9 +55,9 @@ type Container struct {
 }
 
 func NewContainer(db *sql.DB) *Container {
-	categoryRepo := category_repo.NewCategoryRepository(db)
-	spendingRepo := spending_repo.NewSpendingRepository(db)
 	storeRepo := store_repo.NewStoreRepository(db)
+	categoryRepo := category_repo.NewCategoryRepository(db, storeRepo)
+	spendingRepo := spending_repo.NewSpendingRepository(db, categoryRepo)
 	unitOfWork := repositories.NewUnitOfWork(db)
 
 	return &Container{

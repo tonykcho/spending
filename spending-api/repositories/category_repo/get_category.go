@@ -175,6 +175,56 @@ func (repo *categoryRepository) GetCategoryListByIds(context context.Context, tx
 	return categories, err
 }
 
+func (repo *categoryRepository) LoadStoresForCategory(ctx context.Context, tx *sql.Tx, category *models.Category) error {
+	tracer := otel.Tracer("spending-api")
+	_, span := tracer.Start(ctx, "DB:LoadStoresForCategory")
+	defer span.End()
+
+	if category == nil {
+		return nil
+	}
+
+	stores, err := repo.store_repo.GetStoresByCategoryId(ctx, tx, category.Id)
+	if err != nil {
+		return err
+	}
+
+	category.Stores = stores
+
+	return nil
+}
+
+func (repo *categoryRepository) LoadStoresForCategories(ctx context.Context, tx *sql.Tx, categories []*models.Category) error {
+	tracer := otel.Tracer("spending-api")
+	_, span := tracer.Start(ctx, "DB:LoadStoresForCategories")
+	defer span.End()
+
+	if len(categories) == 0 {
+		return nil
+	}
+
+	categoryIds := make([]int, len(categories))
+	for i, category := range categories {
+		categoryIds[i] = category.Id
+	}
+
+	storesMap, err := repo.store_repo.GetStoresByCategoryIds(ctx, tx, categoryIds)
+	if err != nil {
+		return err
+	}
+
+	for _, category := range categories {
+		stores, ok := storesMap[category.Id]
+		if ok {
+			category.Stores = stores
+		} else {
+			category.Stores = []*models.Store{}
+		}
+	}
+
+	return nil
+}
+
 func readCategory(rows *sql.Rows) *models.Category {
 	var category models.Category
 

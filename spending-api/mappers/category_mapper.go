@@ -17,6 +17,10 @@ func MapCategory(category *models.Category) *dto.CategoryDto {
 		UpdatedAt: category.UpdatedAt,
 	}
 
+	if category.Stores != nil {
+		dto.Stores = MapStoreList(category.Stores)
+	}
+
 	return dto
 }
 

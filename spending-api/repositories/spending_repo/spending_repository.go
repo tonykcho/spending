@@ -24,6 +24,7 @@ type spendingRepository struct {
 	category_repo category_repo.CategoryRepository
 }
 
-func NewSpendingRepository(db *sql.DB) *spendingRepository {
-	return &spendingRepository{db: db, category_repo: category_repo.NewCategoryRepository(db)}
+func NewSpendingRepository(db *sql.DB, categoryRepo category_repo.CategoryRepository) *spendingRepository {
+
+	return &spendingRepository{db: db, category_repo: categoryRepo}
 }
