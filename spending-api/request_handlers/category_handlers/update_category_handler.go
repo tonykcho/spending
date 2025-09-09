@@ -29,10 +29,15 @@ func NewUpdateCategoryHandler(categoryRepo category_repo.CategoryRepository, uni
 }
 
 type UpdateCategoryRequest struct {
-	Name string `json:"name"`
+	Id   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
 }
 
 func (request UpdateCategoryRequest) Valid(context context.Context) error {
+	if request.Id == uuid.Nil {
+		return fmt.Errorf("id cannot be empty")
+	}
+
 	if request.Name == "" {
 		return fmt.Errorf("name cannot be empty")
 	}
@@ -54,6 +59,13 @@ func (handler *updateCategoryHandler) Handle(writer http.ResponseWriter, request
 
 	command, err := utils.DecodeValid[UpdateCategoryRequest](context, request)
 	if err != nil {
+		utils.TraceError(span, err)
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if command.Id != categoryUUId {
+		err = fmt.Errorf("id in path and body do not match")
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
