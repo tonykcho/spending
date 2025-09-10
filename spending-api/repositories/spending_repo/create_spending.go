@@ -3,6 +3,7 @@ package spending_repo
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"spending/models"
 	"spending/repositories"
 	"spending/utils"
@@ -10,10 +11,14 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func (repo *spendingRepository) InsertSpendingRecord(ctx context.Context, tx *sql.Tx, record models.SpendingRecord) (*models.SpendingRecord, error) {
+func (repo *spendingRepository) InsertSpendingRecord(ctx context.Context, tx *sql.Tx, record *models.SpendingRecord) (*models.SpendingRecord, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(ctx, "DB:InsertSpendingRecord")
 	defer span.End()
+
+	if record == nil {
+		return nil, fmt.Errorf("record is nil")
+	}
 
 	// Create query to insert a new spending record
 	query := `

@@ -83,14 +83,7 @@ func (handler *createSpendingHandler) Handle(writer http.ResponseWriter, request
 		}
 
 		// Create a SpendingRecord from the request
-		newSpending := models.SpendingRecord{
-			Amount:       command.Amount,
-			Remark:       command.Remark,
-			SpendingDate: command.SpendingDate,
-			CategoryId:   category.Id,
-			CreatedAt:    time.Now().UTC(),
-			UpdatedAt:    time.Now().UTC(),
-		}
+		newSpending := models.NewSpendingRecord(command.Amount, command.Remark, command.SpendingDate, category.Id)
 
 		// Insert the record into the database
 		spending, txErr = handler.spending_repo.InsertSpendingRecord(context, tx, newSpending)

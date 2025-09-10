@@ -16,3 +16,12 @@ type Category struct {
 	IsDeleted bool
 	DeletedAt time.Time
 }
+
+func NewCategory(name string) *Category {
+	return &Category{
+		UUId:      uuid.New(),
+		Name:      name,
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
+	}
+}

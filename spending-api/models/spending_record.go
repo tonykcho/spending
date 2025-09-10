@@ -19,3 +19,15 @@ type SpendingRecord struct {
 	IsDeleted    bool
 	DeletedAt    time.Time
 }
+
+func NewSpendingRecord(amount float32, remark string, spendingDate time.Time, categoryId int) *SpendingRecord {
+	return &SpendingRecord{
+		UUId:         uuid.New(),
+		Amount:       amount,
+		Remark:       remark,
+		SpendingDate: spendingDate,
+		CategoryId:   categoryId,
+		CreatedAt:    time.Now().UTC(),
+		UpdatedAt:    time.Now().UTC(),
+	}
+}

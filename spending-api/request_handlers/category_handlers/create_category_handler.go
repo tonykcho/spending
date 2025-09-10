@@ -9,27 +9,31 @@ import (
 	"spending/models"
 	"spending/repositories"
 	"spending/repositories/category_repo"
+	"spending/repositories/store_repo"
 	"spending/request_handlers"
+	"spending/request_handlers/store_handlers"
 	"spending/utils"
-	"time"
 
 	"go.opentelemetry.io/otel"
 )
 
 type createCategoryHandler struct {
 	category_repo category_repo.CategoryRepository
+	store_repo    store_repo.StoreRepository
 	unit_of_work  repositories.UnitOfWork
 }
 
-func NewCreateCategoryHandler(categoryRepo category_repo.CategoryRepository, unitOfWork repositories.UnitOfWork) request_handlers.RequestHandler {
+func NewCreateCategoryHandler(categoryRepo category_repo.CategoryRepository, storeRepo store_repo.StoreRepository, unitOfWork repositories.UnitOfWork) request_handlers.RequestHandler {
 	return &createCategoryHandler{
 		category_repo: categoryRepo,
+		store_repo:    storeRepo,
 		unit_of_work:  unitOfWork,
 	}
 }
 
 type CreateCategoryRequest struct {
-	Name string `json:"name"`
+	Name   string                              `json:"name"`
+	Stores []store_handlers.CreateStoreRequest `json:"stores"`
 }
 
 func (request CreateCategoryRequest) Valid(context context.Context) error {
@@ -44,7 +48,6 @@ func (handler *createCategoryHandler) Handle(writer http.ResponseWriter, request
 	ctx, span := tracer.Start(request.Context(), "CreateCategoryHandler")
 	defer span.End()
 
-	// Parse the request body into CreateCategoryRequest struct
 	command, err := utils.DecodeValid[CreateCategoryRequest](ctx, request)
 	if err != nil {
 		utils.TraceError(span, err)
@@ -68,16 +71,26 @@ func (handler *createCategoryHandler) Handle(writer http.ResponseWriter, request
 			return txErr
 		}
 
-		newCategory := models.Category{
-			Name:      command.Name,
-			CreatedAt: time.Now().UTC(),
-			UpdatedAt: time.Now().UTC(),
-		}
-
+		newCategory := models.NewCategory(command.Name)
 		category, txErr = handler.category_repo.InsertCategory(ctx, tx, newCategory)
 		if txErr != nil {
 			status = http.StatusInternalServerError
 			return txErr
+		}
+
+		if len(command.Stores) > 0 {
+			var stores []*models.Store
+			for _, storeReq := range command.Stores {
+				store := models.NewStore(storeReq.Name, category.Id)
+				stores = append(stores, store)
+			}
+
+			createdStores, txErr := handler.store_repo.InsertStores(ctx, tx, stores)
+			if txErr != nil {
+				status = http.StatusInternalServerError
+				return txErr
+			}
+			category.Stores = createdStores
 		}
 
 		return nil

@@ -10,6 +10,7 @@ import (
 
 type StoreRepository interface {
 	InsertStore(ctx context.Context, tx *sql.Tx, store *models.Store) (*models.Store, error)
+	InsertStores(ctx context.Context, tx *sql.Tx, stores []*models.Store) ([]*models.Store, error)
 	DeleteStore(ctx context.Context, tx *sql.Tx, id uuid.UUID) error
 	GetStoreById(context context.Context, tx *sql.Tx, id int) (*models.Store, error)
 	GetStoreByUUId(ctx context.Context, tx *sql.Tx, uuid uuid.UUID) (*models.Store, error)

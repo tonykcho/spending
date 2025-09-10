@@ -35,7 +35,7 @@ func (handler *getCategoryHandler) Handle(writer http.ResponseWriter, request *h
 	category, err := handler.category_repo.GetCategoryByUUId(ctx, nil, categoryUUId)
 	if err != nil {
 		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusBadRequest)
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

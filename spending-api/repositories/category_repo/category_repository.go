@@ -10,7 +10,7 @@ import (
 )
 
 type CategoryRepository interface {
-	InsertCategory(context context.Context, tx *sql.Tx, category models.Category) (*models.Category, error)
+	InsertCategory(context context.Context, tx *sql.Tx, category *models.Category) (*models.Category, error)
 	DeleteCategory(context context.Context, tx *sql.Tx, uuid uuid.UUID) error
 	GetCategoryById(context context.Context, tx *sql.Tx, id int) (*models.Category, error)
 	GetCategoryByUUId(context context.Context, tx *sql.Tx, uuid uuid.UUID) (*models.Category, error)

@@ -3,6 +3,7 @@ package category_repo
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"spending/models"
 	"spending/repositories"
 	"spending/utils"
@@ -10,10 +11,14 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func (repo *categoryRepository) InsertCategory(context context.Context, tx *sql.Tx, category models.Category) (*models.Category, error) {
+func (repo *categoryRepository) InsertCategory(context context.Context, tx *sql.Tx, category *models.Category) (*models.Category, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(context, "DB:InsertCategory")
 	defer span.End()
+
+	if category == nil {
+		return nil, fmt.Errorf("category cannot be nil")
+	}
 
 	query := `
 	INSERT INTO categories (

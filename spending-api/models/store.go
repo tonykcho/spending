@@ -16,3 +16,13 @@ type Store struct {
 	IsDeleted  bool
 	DeletedAt  time.Time
 }
+
+func NewStore(name string, categoryId int) *Store {
+	return &Store{
+		UUId:       uuid.New(),
+		Name:       name,
+		CategoryId: categoryId,
+		CreatedAt:  time.Now().UTC(),
+		UpdatedAt:  time.Now().UTC(),
+	}
+}
