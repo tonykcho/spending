@@ -2,6 +2,7 @@ package store_handlers
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"spending/repositories"
 	"spending/repositories/store_repo"
@@ -38,12 +39,18 @@ func (handler *deleteStoreHandler) Handle(writer http.ResponseWriter, request *h
 		return
 	}
 
-	status := http.StatusInternalServerError
-
 	err = handler.unit_of_work.WithTransaction(func(tx *sql.Tx) error {
-		txErr := handler.store_repo.DeleteStore(ctx, tx, storeUUId)
+		store, txErr := handler.store_repo.GetStoreByUUId(ctx, tx, storeUUId)
 		if txErr != nil {
-			status = http.StatusInternalServerError
+			return txErr
+		}
+
+		if store == nil {
+			return fmt.Errorf("store not found")
+		}
+
+		txErr = handler.store_repo.DeleteStore(ctx, tx, storeUUId)
+		if txErr != nil {
 			return txErr
 		}
 		return nil
@@ -51,7 +58,7 @@ func (handler *deleteStoreHandler) Handle(writer http.ResponseWriter, request *h
 
 	if err != nil {
 		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), status)
+		http.Error(writer, err.Error(), utils.MapErrorToStatusCode(err))
 		return
 	}
 

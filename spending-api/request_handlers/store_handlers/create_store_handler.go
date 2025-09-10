@@ -58,30 +58,25 @@ func (handler *createStoreHandler) Handle(writer http.ResponseWriter, request *h
 		return
 	}
 
-	var status int = http.StatusInternalServerError
 	var store *models.Store
 
 	err = handler.unit_of_work.WithTransaction(func(tx *sql.Tx) error {
 		category, txErr := handler.category_repo.GetCategoryByUUId(context, tx, command.CategoryId)
 		if txErr != nil {
-			status = http.StatusInternalServerError
 			return txErr
 		}
 
 		if category == nil {
-			status = http.StatusBadRequest
-			return fmt.Errorf("category not found")
+			return utils.ErrNotFound
 		}
 
 		existingStore, txErr := handler.store_repo.GetStoreByCategoryAndName(context, tx, category.Id, command.Name)
 		if txErr != nil {
-			status = http.StatusInternalServerError
 			return txErr
 		}
 
 		if existingStore != nil {
-			status = http.StatusBadRequest
-			return fmt.Errorf("store already exists")
+			return utils.ErrResourceExists
 		}
 
 		newStore := &models.Store{
@@ -93,7 +88,6 @@ func (handler *createStoreHandler) Handle(writer http.ResponseWriter, request *h
 
 		store, txErr = handler.store_repo.InsertStore(context, tx, newStore)
 		if txErr != nil {
-			status = http.StatusInternalServerError
 			return txErr
 		}
 
@@ -102,7 +96,7 @@ func (handler *createStoreHandler) Handle(writer http.ResponseWriter, request *h
 
 	if err != nil {
 		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), status)
+		http.Error(writer, err.Error(), utils.MapErrorToStatusCode(err))
 		return
 	}
 

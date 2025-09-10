@@ -66,19 +66,16 @@ func (handler *createSpendingHandler) Handle(writer http.ResponseWriter, request
 		return
 	}
 
-	status := http.StatusInternalServerError
 	var spending *models.SpendingRecord
 
 	err = handler.unit_of_work.WithTransaction(func(tx *sql.Tx) error {
 		category, txErr := handler.category_repo.GetCategoryByUUId(context, tx, command.CategoryId)
 		if txErr != nil {
-			status = http.StatusInternalServerError
 			return txErr
 		}
 
 		if category == nil {
 			txErr := fmt.Errorf("category not found")
-			status = http.StatusBadRequest
 			return txErr
 		}
 
@@ -88,7 +85,6 @@ func (handler *createSpendingHandler) Handle(writer http.ResponseWriter, request
 		// Insert the record into the database
 		spending, txErr = handler.spending_repo.InsertSpendingRecord(context, tx, newSpending)
 		if txErr != nil {
-			status = http.StatusInternalServerError
 			return txErr
 		}
 
@@ -97,7 +93,7 @@ func (handler *createSpendingHandler) Handle(writer http.ResponseWriter, request
 
 	if err != nil {
 		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), status)
+		http.Error(writer, err.Error(), utils.MapErrorToStatusCode(err))
 		return
 	}
 

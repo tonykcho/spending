@@ -38,12 +38,18 @@ func (handler *deleteSpendingHandler) Handle(writer http.ResponseWriter, request
 		return
 	}
 
-	status := http.StatusInternalServerError
-
 	err = handler.unit_of_work.WithTransaction(func(tx *sql.Tx) error {
-		txErr := handler.spending_repo.DeleteSpending(context, tx, spendingUUId)
+		spending, txErr := handler.spending_repo.GetSpendingByUUId(context, tx, spendingUUId)
 		if txErr != nil {
-			status = http.StatusInternalServerError
+			return txErr
+		}
+
+		if spending == nil {
+			return utils.ErrNotFound
+		}
+
+		txErr = handler.spending_repo.DeleteSpending(context, tx, spendingUUId)
+		if txErr != nil {
 			return txErr
 		}
 		return nil
@@ -51,7 +57,7 @@ func (handler *deleteSpendingHandler) Handle(writer http.ResponseWriter, request
 
 	if err != nil {
 		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), status)
+		http.Error(writer, err.Error(), utils.MapErrorToStatusCode(err))
 		return
 	}
 

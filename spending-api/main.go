@@ -70,7 +70,7 @@ func NewContainer(db *sql.DB) *Container {
 		DeleteCategoryHandler:  category_handlers.NewDeleteCategoryHandler(categoryRepo, unitOfWork),
 		GetCategoryHandler:     category_handlers.NewGetCategoryHandler(categoryRepo),
 		GetCategoryListHandler: category_handlers.NewGetCategoryListHandler(categoryRepo),
-		UpdateCategoryHandler:  category_handlers.NewUpdateCategoryHandler(categoryRepo, unitOfWork),
+		UpdateCategoryHandler:  category_handlers.NewUpdateCategoryHandler(categoryRepo, storeRepo, unitOfWork),
 
 		CreateSpendingHandler:  spending_handlers.NewCreateSpendingHandler(spendingRepo, categoryRepo, unitOfWork),
 		GetSpendingHandler:     spending_handlers.NewGetSpendingHandler(spendingRepo),

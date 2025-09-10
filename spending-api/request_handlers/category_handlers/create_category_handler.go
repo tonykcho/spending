@@ -56,25 +56,21 @@ func (handler *createCategoryHandler) Handle(writer http.ResponseWriter, request
 	}
 
 	var category *models.Category
-	var status int = http.StatusInternalServerError
 
 	err = handler.unit_of_work.WithTransaction(func(tx *sql.Tx) error {
 		existingCategory, txErr := handler.category_repo.GetCategoryByName(ctx, tx, command.Name)
 		if txErr != nil {
-			status = http.StatusInternalServerError
 			return txErr
 		}
 
 		if existingCategory != nil {
-			txErr = fmt.Errorf("category already exists")
-			status = http.StatusConflict
+			txErr = utils.ErrResourceExists
 			return txErr
 		}
 
 		newCategory := models.NewCategory(command.Name)
 		category, txErr = handler.category_repo.InsertCategory(ctx, tx, newCategory)
 		if txErr != nil {
-			status = http.StatusInternalServerError
 			return txErr
 		}
 
@@ -87,7 +83,6 @@ func (handler *createCategoryHandler) Handle(writer http.ResponseWriter, request
 
 			createdStores, txErr := handler.store_repo.InsertStores(ctx, tx, stores)
 			if txErr != nil {
-				status = http.StatusInternalServerError
 				return txErr
 			}
 			category.Stores = createdStores
@@ -98,7 +93,7 @@ func (handler *createCategoryHandler) Handle(writer http.ResponseWriter, request
 
 	if err != nil {
 		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), status)
+		http.Error(writer, err.Error(), utils.MapErrorToStatusCode(err))
 		return
 	}
 

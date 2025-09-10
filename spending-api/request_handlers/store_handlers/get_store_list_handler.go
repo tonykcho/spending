@@ -28,7 +28,7 @@ func (handler *getStoreListHandler) Handle(writer http.ResponseWriter, request *
 	stores, err := handler.store_repo.GetStoreList(context, nil)
 	if err != nil {
 		utils.TraceError(span, err)
-		http.Error(writer, err.Error(), http.StatusBadRequest)
+		http.Error(writer, err.Error(), utils.MapErrorToStatusCode(err))
 		return
 	}
 
