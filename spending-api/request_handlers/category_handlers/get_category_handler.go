@@ -24,7 +24,7 @@ func NewGetCategoryHandler(categoryRepo category_repo.CategoryRepository) reques
 
 func (handler *getCategoryHandler) Handle(writer http.ResponseWriter, request *http.Request) {
 	tracer := otel.Tracer("spending-api")
-	context, span := tracer.Start(request.Context(), "GetCategoryHandler")
+	ctx, span := tracer.Start(request.Context(), "GetCategoryHandler")
 	defer span.End()
 
 	routerVars := mux.Vars(request)
@@ -32,7 +32,7 @@ func (handler *getCategoryHandler) Handle(writer http.ResponseWriter, request *h
 	categoryUUId, err := uuid.Parse(routerVars["id"])
 	utils.TraceError(span, err)
 
-	category, err := handler.category_repo.GetCategoryByUUId(context, nil, categoryUUId)
+	category, err := handler.category_repo.GetCategoryByUUId(ctx, nil, categoryUUId)
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
@@ -44,8 +44,15 @@ func (handler *getCategoryHandler) Handle(writer http.ResponseWriter, request *h
 		return
 	}
 
+	err = handler.category_repo.LoadStoresForCategory(ctx, nil, category)
+	if err != nil {
+		utils.TraceError(span, err)
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	response := mappers.MapCategory(category)
 
-	err = utils.Encode(context, writer, http.StatusOK, response)
+	err = utils.Encode(ctx, writer, http.StatusOK, response)
 	utils.TraceError(span, err)
 }

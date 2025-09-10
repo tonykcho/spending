@@ -32,6 +32,13 @@ func (handler *getCategoryListHandler) Handle(writer http.ResponseWriter, reques
 		return
 	}
 
+	err = handler.category_repo.LoadStoresForCategories(context, nil, categories)
+	if err != nil {
+		utils.TraceError(span, err)
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	response := mappers.MapCategoryList(categories)
 
 	err = utils.Encode(context, writer, http.StatusOK, response)
