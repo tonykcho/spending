@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"spending/data_access"
+	"spending/middlewares"
 	"spending/repositories"
 	"spending/repositories/category_repo"
 	"spending/repositories/spending_repo"
@@ -89,6 +90,8 @@ func main() {
 	data_access.CreateDatabase()
 
 	router := mux.NewRouter()
+	router.Use(middlewares.LoggingMiddleware)
+	router.Use(middlewares.MetricsMiddleware)
 	db := data_access.OpenDatabase()
 	defer db.Close()
 
