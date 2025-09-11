@@ -11,7 +11,7 @@ func MapCategory(category *models.Category) *dto.CategoryDto {
 	}
 
 	dto := &dto.CategoryDto{
-		UUId:      category.UUId,
+		Id:        category.UUId,
 		Name:      category.Name,
 		CreatedAt: category.CreatedAt,
 		UpdatedAt: category.UpdatedAt,

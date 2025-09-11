@@ -23,7 +23,7 @@ export default function CategoryPage() {
     }
 
     async function onCategoryDeleted(category: Category) {
-        await deleteCategoryAsync(category.uuid);
+        await deleteCategoryAsync(category.id);
         await fetchCategories();
     }
 
@@ -31,13 +31,13 @@ export default function CategoryPage() {
         <div className="p-2">
             <div className="flex flex-wrap items-stretch">
                 {categories.map((category) => (
-                    <div key={category.uuid} className="flex flex-col w-1/4 p-4">
+                    <div key={category.id} className="flex flex-col w-1/4 p-4">
                         <div className="flex-1 flex flex-col border rounded p-2 shadow-md bg-gray-100">
                             <h1 className="self-center text-2xl font-semibold">{category.name}</h1>
 
                             <div className="flex-1 mt-2">
                                 {category.stores.map((store) => (
-                                    <div key={store.uuid} className="flex flex-col border rounded p-2 shadow-md bg-gray-50">
+                                    <div key={store.id} className="flex flex-col border rounded p-2 shadow-md bg-gray-50 mt-2">
                                         <h2 className="text-xl font-semibold">{store.name}</h2>
                                     </div>
                                 ))}

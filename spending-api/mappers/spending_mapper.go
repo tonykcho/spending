@@ -7,7 +7,7 @@ import (
 
 func MapSpending(spending *models.SpendingRecord) *dto.SpendingDto {
 	dto := &dto.SpendingDto{
-		UUId:         spending.UUId,
+		Id:           spending.UUId,
 		Amount:       spending.Amount,
 		Remark:       spending.Remark,
 		SpendingDate: spending.SpendingDate,

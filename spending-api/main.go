@@ -49,7 +49,7 @@ type Container struct {
 	GetSpendingListHandler request_handlers.RequestHandler
 	DeleteSpendingHandler  request_handlers.RequestHandler
 
-	CreateStoreHandler  request_handlers.RequestHandler
+	// CreateStoreHandler  request_handlers.RequestHandler
 	DeleteStoreHandler  request_handlers.RequestHandler
 	GetStoreHandler     request_handlers.RequestHandler
 	GetStoreListHandler request_handlers.RequestHandler
@@ -78,7 +78,7 @@ func NewContainer(db *sql.DB) *Container {
 		GetSpendingListHandler: spending_handlers.NewGetSpendingListHandler(spendingRepo),
 		DeleteSpendingHandler:  spending_handlers.NewDeleteSpendingHandler(spendingRepo, unitOfWork),
 
-		CreateStoreHandler:  store_handlers.NewCreateStoreHandler(storeRepo, categoryRepo, unitOfWork),
+		// CreateStoreHandler:  store_handlers.NewCreateStoreHandler(storeRepo, categoryRepo, unitOfWork),
 		DeleteStoreHandler:  store_handlers.NewDeleteStoreHandler(storeRepo, unitOfWork),
 		GetStoreHandler:     store_handlers.NewGetStoreHandler(storeRepo),
 		GetStoreListHandler: store_handlers.NewGetStoreListHandler(storeRepo),
@@ -139,7 +139,7 @@ func configureEndpoints(router *mux.Router, db *sql.DB) {
 
 	router.HandleFunc("/stores/{id}", container.GetStoreHandler.Handle).Methods("GET")
 	router.HandleFunc("/stores", container.GetStoreListHandler.Handle).Methods("GET")
-	router.HandleFunc("/stores", container.CreateStoreHandler.Handle).Methods("POST")
+	// router.HandleFunc("/stores", container.CreateStoreHandler.Handle).Methods("POST")
 	router.HandleFunc("/stores/{id}", container.DeleteStoreHandler.Handle).Methods("DELETE")
 
 	router.HandleFunc("/metrics", promhttp.Handler().ServeHTTP)

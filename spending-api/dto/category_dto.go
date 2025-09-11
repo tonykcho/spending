@@ -7,7 +7,7 @@ import (
 )
 
 type CategoryDto struct {
-	UUId      uuid.UUID
+	Id        uuid.UUID
 	Name      string
 	CreatedAt time.Time
 	UpdatedAt time.Time

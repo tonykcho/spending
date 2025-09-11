@@ -7,7 +7,7 @@ import (
 )
 
 type SpendingDto struct {
-	UUId         uuid.UUID
+	Id           uuid.UUID
 	Amount       float32
 	Remark       string
 	SpendingDate time.Time

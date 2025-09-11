@@ -1,19 +1,17 @@
 import { CreateCategoryDto, UpdateCategoryDto, Category, CategoryDto, mapCategoryFromDto } from "@/models/category";
 
-export async function getCategoryListAsync(): Promise<Category[]>
-{
+export async function getCategoryListAsync(): Promise<Category[]> {
     const response = await fetch("http://localhost:8001/categories");
-    if (!response.ok)
-    {
+    if (!response.ok) {
         throw new Error("Failed to fetch categories");
     }
     const categoryDtos: CategoryDto[] = await response.json();
     const categories = categoryDtos.map(mapCategoryFromDto);
+    console.log("Fetched categories:", categories);
     return categories;
 }
 
-export async function createCategoryAsync(requestData: CreateCategoryDto): Promise<void>
-{
+export async function createCategoryAsync(requestData: CreateCategoryDto): Promise<void> {
     const response = await fetch("http://localhost:8001/categories", {
         method: "POST",
         headers: {
@@ -22,14 +20,12 @@ export async function createCategoryAsync(requestData: CreateCategoryDto): Promi
         body: JSON.stringify(requestData),
     });
 
-    if (!response.ok)
-    {
+    if (!response.ok) {
         throw new Error("Failed to create category");
     }
 }
 
-export async function updateCategoryAsync(id: string, requestData: UpdateCategoryDto): Promise<void>
-{
+export async function updateCategoryAsync(id: string, requestData: UpdateCategoryDto): Promise<void> {
     const response = await fetch(`http://localhost:8001/categories/${id}`, {
         method: "PUT",
         headers: {
@@ -38,20 +34,17 @@ export async function updateCategoryAsync(id: string, requestData: UpdateCategor
         body: JSON.stringify(requestData),
     });
 
-    if (!response.ok)
-    {
+    if (!response.ok) {
         throw new Error("Failed to update category");
     }
 }
 
-export async function deleteCategoryAsync(id: string): Promise<void>
-{
+export async function deleteCategoryAsync(id: string): Promise<void> {
     const response = await fetch(`http://localhost:8001/categories/${id}`, {
         method: "DELETE",
     });
 
-    if (!response.ok)
-    {
+    if (!response.ok) {
         throw new Error("Failed to delete category");
     }
 }

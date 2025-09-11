@@ -1,7 +1,7 @@
-import { mapStoreFromDto, Store, StoreDto } from "./store";
+import { CreateStoreDto, mapStoreFromDto, Store, StoreDto, UpdateStoreDto } from "./store";
 
 export interface CategoryDto {
-    UUId: string;
+    Id: string;
     Name: string;
     Stores: StoreDto[];
     CreatedAt: string;
@@ -9,7 +9,7 @@ export interface CategoryDto {
 }
 
 export interface Category {
-    uuid: string;
+    id: string;
     name: string;
     stores: Store[];
     createdAt: Date;
@@ -18,7 +18,7 @@ export interface Category {
 
 export function mapCategoryFromDto(dto: CategoryDto): Category {
     return {
-        uuid: dto.UUId,
+        id: dto.Id,
         name: dto.Name,
         stores: dto.Stores ? dto.Stores.map(mapStoreFromDto) : [],
         createdAt: new Date(dto.CreatedAt),
@@ -27,9 +27,14 @@ export function mapCategoryFromDto(dto: CategoryDto): Category {
 }
 
 export interface CreateCategoryDto {
-    Name: string;
+    name: string;
+    stores: CreateStoreDto[];
 }
 
 export interface UpdateCategoryDto {
-    Name: string;
+    id: string;
+    name: string;
+    addedStores: CreateStoreDto[];
+    editedStores: UpdateStoreDto[];
+    deletedStores: string[];
 }

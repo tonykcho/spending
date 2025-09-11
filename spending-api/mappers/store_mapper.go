@@ -11,7 +11,7 @@ func MapStore(store *models.Store) *dto.StoreDto {
 	}
 
 	dto := &dto.StoreDto{
-		UUId:      store.UUId,
+		Id:        store.UUId,
 		Name:      store.Name,
 		CreatedAt: store.CreatedAt,
 		UpdatedAt: store.UpdatedAt,

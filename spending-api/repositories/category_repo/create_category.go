@@ -40,7 +40,11 @@ func (repo *categoryRepository) InsertCategory(context context.Context, tx *sql.
 	}
 
 	var dbQuery = func() (*sql.Rows, error) {
-		return dbTx.QueryContext(context, query)
+		return dbTx.QueryContext(context,
+			query,
+			category.Name,
+			category.CreatedAt,
+			category.UpdatedAt)
 	}
 
 	newCategory, err := repositories.Query(span, dbQuery, readCategory)

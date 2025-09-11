@@ -1,27 +1,24 @@
 import { Category, CategoryDto, mapCategoryFromDto } from "./category";
 
-export interface SpendingDto
-{
-    UUId: string;
+export interface SpendingDto {
+    Id: string;
     Amount: number;
     Remark: string;
     SpendingDate: string;
     Category: CategoryDto | null;
 }
 
-export interface Spending
-{
-    uuid: string;
+export interface Spending {
+    id: string;
     amount: number;
     remark: string;
     spendingDate: Date;
     category: Category | null;
 }
 
-export function mapSpendingFromDto(dto: SpendingDto): Spending
-{
+export function mapSpendingFromDto(dto: SpendingDto): Spending {
     return {
-        uuid: dto.UUId,
+        id: dto.Id,
         amount: dto.Amount,
         remark: dto.Remark,
         spendingDate: new Date(dto.SpendingDate),

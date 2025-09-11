@@ -1,12 +1,12 @@
 export interface StoreDto {
-    UUId: string;
+    Id: string;
     Name: string;
     CreatedAt: string;
     UpdatedAt: string;
 }
 
 export interface Store {
-    uuid: string;
+    id: string;
     name: string;
     createdAt: Date;
     updatedAt: Date;
@@ -14,7 +14,7 @@ export interface Store {
 
 export function mapStoreFromDto(dto: StoreDto): Store {
     return {
-        uuid: dto.UUId,
+        id: dto.Id,
         name: dto.Name,
         createdAt: new Date(dto.CreatedAt),
         updatedAt: new Date(dto.UpdatedAt),
@@ -22,9 +22,10 @@ export function mapStoreFromDto(dto: StoreDto): Store {
 }
 
 export interface CreateStoreDto {
-    Name: string;
+    name: string;
 }
 
 export interface UpdateStoreDto {
-    Name: string;
+    id: string;
+    name: string;
 }

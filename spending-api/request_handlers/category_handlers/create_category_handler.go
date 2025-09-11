@@ -40,6 +40,11 @@ func (request CreateCategoryRequest) Valid(context context.Context) error {
 	if request.Name == "" {
 		return fmt.Errorf("name cannot be empty")
 	}
+	for _, store := range request.Stores {
+		if err := store.Valid(context); err != nil {
+			return fmt.Errorf("invalid store: %w", err)
+		}
+	}
 	return nil
 }
 

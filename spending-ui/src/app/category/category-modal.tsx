@@ -4,58 +4,79 @@ import { Category, CreateCategoryDto, UpdateCategoryDto } from "@/models/categor
 import React, { forwardRef, useImperativeHandle } from "react";
 import { createCategoryAsync, updateCategoryAsync } from "@/services/category-service";
 
-interface CategoryFormData
-{
-    uuid: string | null;
+interface CategoryFormData {
+    id: string | null;
     name: string;
+    stores: StoreFormData[];
 }
 
-export interface CategoryModalRef
-{
+interface StoreFormData {
+    id: string | null;
+    name: string;
+    isDeleted: boolean;
+}
+
+export interface CategoryModalRef {
     open: (category: Category | null) => void;
 }
 
-export interface CategoryModalProps
-{
+export interface CategoryModalProps {
     onCategoryChanged?: () => void
 }
 
-const CategoryModal = forwardRef<CategoryModalRef, CategoryModalProps>((props, ref) =>
-{
+const CategoryModal = forwardRef<CategoryModalRef, CategoryModalProps>((props, ref) => {
     const [isOpen, setIsOpen] = React.useState(false);
-    const [formData, setFormData] = React.useState<CategoryFormData>({ uuid: null, name: "" });
+    const [formData, setFormData] = React.useState<CategoryFormData>({ id: null, name: "", stores: [] });
 
-    function openModal(category: Category | null = null)
-    {
+    function openModal(category: Category | null = null) {
         setIsOpen(true);
-        if (category != null)
-        {
-            setFormData({ uuid: category.uuid, name: category.name });
+        if (category != null) {
+            setFormData({
+                id: category.id,
+                name: category.name,
+                stores: category.stores.map(store => ({ id: store.id, name: store.name, isDeleted: false }))
+            });
         }
     }
 
-    function closeModal()
-    {
+    function closeModal() {
         setIsOpen(false);
-        setFormData({ uuid: null, name: "" });
+        setFormData({ id: null, name: "", stores: [] });
     }
 
     useImperativeHandle(ref, () => ({
         open: openModal,
     }));
 
-    async function submit()
-    {
-        if (formData.name.trim() === "")
-        {
+    function onStoreDeleted(store: StoreFormData) {
+        if (store.id == null) {
+            setFormData({
+                ...formData,
+                stores: formData.stores.filter(s => s !== store)
+            });
+        }
+        else {
+            const updatedStores = formData.stores.map(s => {
+                if (s === store) {
+                    return { ...s, isDeleted: true };
+                }
+                return s;
+            });
+            setFormData({
+                ...formData,
+                stores: updatedStores
+            });
+        }
+    }
+
+    async function submit() {
+        if (formData.name.trim() === "") {
             return;
         }
 
-        if (formData.uuid != null)
-        {
+        if (formData.id != null) {
             await updateCategory();
-        } else
-        {
+        } else {
             await createCategory();
         }
 
@@ -64,27 +85,41 @@ const CategoryModal = forwardRef<CategoryModalRef, CategoryModalProps>((props, r
         closeModal();
     }
 
-    async function createCategory()
-    {
+    async function createCategory() {
         const requestData: CreateCategoryDto = {
-            Name: formData.name
+            name: formData.name,
+            stores: formData.stores.map(store => {
+                return { name: store.name }
+            })
         }
 
         await createCategoryAsync(requestData);
     }
 
-    async function updateCategory()
-    {
-        if (!formData.uuid)
-        {
-            throw new Error("Category UUID is required for update.");
+    async function updateCategory() {
+        if (!formData.id) {
+            throw new Error("Category ID is required for update.");
         }
 
         const requestData: UpdateCategoryDto = {
-            Name: formData.name
+            id: formData.id,
+            name: formData.name,
+            addedStores: formData.stores
+                .filter(store => store.id == null)
+                .map(store => {
+                    return { name: store.name }
+                }),
+            editedStores: formData.stores
+                .filter(store => store.id != null)
+                .map(store => {
+                    return { id: store.id!, name: store.name }
+                }),
+            deletedStores: formData.stores
+                .filter(store => store.isDeleted && store.id != null)
+                .map(store => store.id!)
         }
 
-        await updateCategoryAsync(formData.uuid, requestData)
+        await updateCategoryAsync(formData.id, requestData)
     }
 
     return (
@@ -101,7 +136,7 @@ const CategoryModal = forwardRef<CategoryModalRef, CategoryModalProps>((props, r
                             <button className="close-button" onClick={closeModal}></button>
                         </div>
 
-                        <div className="flex-1 flex flex-col">
+                        <div className="flex flex-col">
                             <label htmlFor="category-name" className="text-sm text-gray-600 mb-1">Category Name</label>
                             <input
                                 id="category-name"
@@ -113,7 +148,44 @@ const CategoryModal = forwardRef<CategoryModalRef, CategoryModalProps>((props, r
                             />
                         </div>
 
-                        <div className="flex justify-between">
+                        <div className="flex-1 flex flex-col mt-4">
+                            <label className="text-sm text-gray-600 mb-1">Stores</label>
+                            <div className="space-y-2 max-h-72 overflow-y-auto">
+                                {formData.stores.map((store, index) => (
+                                    !store.isDeleted && (
+                                        <div key={index} className="flex items-center space-x-2">
+                                            <input
+                                                type="text"
+                                                placeholder="Store Name"
+                                                className="form-control flex-1"
+                                                value={store.name}
+                                                onChange={(e) => {
+                                                    const newStores = [...formData.stores];
+                                                    newStores[index].name = e.target.value;
+                                                    setFormData({ ...formData, stores: newStores });
+                                                }}
+                                            />
+                                            <button
+                                                className="btn btn-sm btn-danger"
+                                                onClick={() => onStoreDeleted(store)}
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    )
+                                ))}
+                            </div>
+                            <button
+                                className="btn btn-sm btn-secondary mt-2"
+                                onClick={() => setFormData({ ...formData, stores: [...formData.stores, { id: null, name: "", isDeleted: false }] })}
+                            >
+                                Add Store
+                            </button>
+                            <div className="border-b my-2 border-gray-300"></div>
+                        </div>
+
+
+                        <div className="flex justify-between mt-2">
                             <button className="btn btn-secondary" onClick={closeModal}>Close</button>
                             <button className="btn btn-primary" onClick={() => { submit() }}>Submit</button>
                         </div>
