@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import TopNavBar from "@/components/top-nav-bar";
+import { MessageProvider } from "@/components/message";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,10 +30,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <div className="w-screen h-screen flex flex-col">
-          <TopNavBar />
-          <div className="flex flex-col flex-1 overflow-y-auto">
-            {children}
-          </div>
+          <MessageProvider>
+            <TopNavBar />
+            <div className="flex flex-col flex-1 overflow-y-auto">
+              {children}
+            </div>
+          </MessageProvider>
         </div>
       </body>
     </html>

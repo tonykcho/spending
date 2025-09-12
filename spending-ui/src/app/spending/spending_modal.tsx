@@ -6,6 +6,7 @@ import { getCategoryListAsync } from "@/services/category-service";
 import { createSpendingAsync } from "@/services/spending-service";
 import React, { useEffect, useImperativeHandle } from "react";
 import { forwardRef } from "react"
+import { useMessage } from "../../components/message"
 
 export interface SpendingModalRef {
     open: () => void;
@@ -19,6 +20,7 @@ const SpendingModal = forwardRef<SpendingModalRef, SpendingModalProps>((props, r
     const [categories, setCategories] = React.useState<Category[]>([]);
     const [isOpen, setIsOpen] = React.useState(false);
     const [formData, setFormData] = React.useState({ amount: "", categoryId: "", storeId: "", spendingDate: "", remark: "" });
+    const { showMessage } = useMessage();
 
     useEffect(() => {
         fetchCategories();
@@ -43,6 +45,11 @@ const SpendingModal = forwardRef<SpendingModalRef, SpendingModalProps>((props, r
     }
 
     async function submit() {
+        if (formData.amount === "" || isNaN(parseFloat(formData.amount))) {
+            showMessage("Amount is required and must be a number");
+            return;
+        }
+
         var requestData: CreateSpendingDto = {
             amount: parseFloat(formData.amount),
             remark: formData.remark,
@@ -79,7 +86,7 @@ const SpendingModal = forwardRef<SpendingModalRef, SpendingModalProps>((props, r
     }
 
     return (
-        <div className={`flex flex-col items-center spending-modal fixed w-full left-0 h-4/5 ${isOpen ? 'top-1/5' : 'top-full'} `}>
+        <div className={`flex flex-col items-center spending-modal fixed w-full left-0 h-5/6 ${isOpen ? 'top-1/6' : 'top-full'} `}>
             <div className="bg-white border rounded-t border-gray-600 w-9/10 h-full flex flex-col">
                 <div className="flex-1 flex flex-col px-4 pt-4">
                     <div className="flex flex-col">

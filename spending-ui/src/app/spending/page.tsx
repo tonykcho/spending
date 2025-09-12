@@ -53,9 +53,11 @@ export default function SpendingPage() {
                         </div>
                     ))}
                 </div>
-                <button className="btn btn-primary h-12 w-72 mt-8 self-center" onClick={onAddSpending}>Add Spending</button>
             </div>
 
+            <div className="fixed left-0 bottom-20 flex justify-center w-full">
+                <button className="btn btn-primary h-12 w-72 mt-8" onClick={onAddSpending}>Add Spending</button>
+            </div>
             <SpendingModal ref={modalRef} onSpendingChanged={() => fetchSpending()} />
         </div>
     );
