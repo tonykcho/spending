@@ -120,6 +120,7 @@ func (repo *categoryRepository) GetCategoryList(context context.Context, tx *sql
 			updated_at
 		FROM categories
 		WHERE is_deleted = FALSE
+		ORDER BY name
 	`
 
 	var dbTx repositories.DbTx = repo.db
@@ -159,7 +160,8 @@ func (repo *categoryRepository) GetCategoryListByIds(context context.Context, tx
 							updated_at
 						  FROM categories
 						  WHERE id IN (%s)
-						  AND is_deleted = FALSE`, strings.Join(placeholders, ","))
+						  AND is_deleted = FALSE
+						  ORDER BY id`, strings.Join(placeholders, ","))
 
 	var dbTx repositories.DbTx = repo.db
 	if tx != nil {

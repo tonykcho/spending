@@ -124,6 +124,7 @@ func (repo *storeRepository) GetStoresByCategoryId(ctx context.Context, tx *sql.
 		FROM stores
 		WHERE category_id = $1
 		AND is_deleted = FALSE
+		ORDER BY id
 	`
 
 	var dbTx repositories.DbTx = repo.db
@@ -156,6 +157,7 @@ func (repo *storeRepository) GetStoresByCategoryIds(ctx context.Context, tx *sql
 		FROM stores
 		WHERE category_id = ANY($1)
 		AND is_deleted = FALSE
+		ORDER BY id
 	`
 
 	var dbTx repositories.DbTx = repo.db
@@ -195,6 +197,7 @@ func (repo *storeRepository) GetStoreList(ctx context.Context, tx *sql.Tx) ([]*m
 			updated_at
 		FROM stores
 		WHERE is_deleted = FALSE
+		ORDER BY id
 	`
 
 	var dbTx repositories.DbTx = repo.db
