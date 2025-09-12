@@ -35,8 +35,8 @@ func NewCreateSpendingHandler(spendingRepo spending_repo.SpendingRepository, cat
 type CreateSpendingRequest struct {
 	Amount       float32   `json:"amount"`
 	Remark       string    `json:"remark"`
-	SpendingDate time.Time `json:"spending_date"`
-	CategoryId   uuid.UUID `json:"category_id"`
+	SpendingDate time.Time `json:"spendingDate"`
+	CategoryId   uuid.UUID `json:"categoryId"`
 }
 
 func (request CreateSpendingRequest) Valid(context context.Context) error {
@@ -47,7 +47,7 @@ func (request CreateSpendingRequest) Valid(context context.Context) error {
 		return fmt.Errorf("spending date cannot be empty")
 	}
 	if request.CategoryId == uuid.Nil {
-		return fmt.Errorf("category_id cannot be empty")
+		return fmt.Errorf("categoryId cannot be empty")
 	}
 	return nil
 }

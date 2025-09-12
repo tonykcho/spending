@@ -25,3 +25,11 @@ export function mapSpendingFromDto(dto: SpendingDto): Spending {
         category: dto.Category ? mapCategoryFromDto(dto.Category) : null,
     };
 }
+
+export interface CreateSpendingDto {
+    amount: number;
+    remark: string;
+    spendingDate: Date | null;
+    categoryId: string | null;
+    storeId: string | null;
+}

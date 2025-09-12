@@ -50,8 +50,12 @@ body {
   @apply content-['×'];
   font-size: 28px;
 }
-input.form-control {
+input.form-control, select.form-control, textarea.form-control {
   @apply border border-gray-300 p-2 rounded focus:shadow-md focus:border-blue-400;
   transition: box-shadow 0.2s ease;
   outline: none;
+}
+
+.spending-modal {
+  transition: top 0.25s ease-out;
 }
