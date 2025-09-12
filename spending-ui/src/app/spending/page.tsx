@@ -26,6 +26,15 @@ export default function SpendingPage() {
         modalRef.current?.open();
     }
 
+    function renderSpendingName(spending: Spending) {
+        if (spending.category != null) {
+            return <h1 className="text-2xl font-semibold">{spending.category.name}</h1>
+        }
+        else {
+            return <h1 className="text-2xl font-semibold">{spending.remark}</h1>
+        }
+    }
+
     return (
         <div className="p-2">
             <div className="flex flex-col">
@@ -34,7 +43,7 @@ export default function SpendingPage() {
                     {spendingList.map((spending) => (
                         <div key={spending.id} className="border rounded p-2 shadow-md bg-gray-100 flex justify-between items-center">
                             <div>
-                                <h1 className="text-2xl font-semibold">{spending.remark}</h1>
+                                {renderSpendingName(spending)}
                                 <p className="text-gray-600">{new Date(spending.spendingDate).toDateString()}</p>
                             </div>
                             <div className="flex items-center space-x-4">
