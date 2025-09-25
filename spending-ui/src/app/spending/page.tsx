@@ -3,34 +3,49 @@ import { Spending } from "@/models/spending";
 import { deleteSpendingAsync, getSpendingListAsync } from "@/services/spending-service";
 import React, { useEffect } from "react";
 import SpendingModal, { SpendingModalRef } from "./spending_modal";
+import UploadModal, { UploadModalRef } from "./upload_modal";
 
-export default function SpendingPage() {
+export default function SpendingPage()
+{
     const [spendingList, setSpendingList] = React.useState<Spending[]>([]);
     const modalRef = React.useRef<SpendingModalRef>(null);
+    const uploadModelRef = React.useRef<UploadModalRef>(null);
 
-    useEffect(() => {
+    useEffect(() =>
+    {
         fetchSpending();
     }, []);
 
-    async function fetchSpending() {
+    async function fetchSpending()
+    {
         const spendingList = await getSpendingListAsync();
         setSpendingList(spendingList);
     }
 
-    async function onSpendingDeleted(spending: Spending) {
+    async function onSpendingDeleted(spending: Spending)
+    {
         await deleteSpendingAsync(spending.id);
         await fetchSpending();
     }
 
-    async function onAddSpending() {
+    async function onAddSpending()
+    {
         modalRef.current?.open();
     }
 
-    function renderSpendingName(spending: Spending) {
-        if (spending.category != null) {
+    async function onUpload()
+    {
+        uploadModelRef.current?.open();
+    }
+
+    function renderSpendingName(spending: Spending)
+    {
+        if (spending.category != null)
+        {
             return <h1 className="text-2xl font-semibold">{spending.category.name}</h1>
         }
-        else {
+        else
+        {
             return <h1 className="text-2xl font-semibold">{spending.remark}</h1>
         }
     }
@@ -55,9 +70,12 @@ export default function SpendingPage() {
                 </div>
             </div>
 
-            <div className="fixed left-0 bottom-20 flex justify-center w-full">
+            <div className="fixed flex-col left-0 bottom-20 flex items-center w-full">
+                <button className="btn btn-primary h-12 w-72 mt-8" onClick={onUpload}>Upload</button>
+
                 <button className="btn btn-primary h-12 w-72 mt-8" onClick={onAddSpending}>Add Spending</button>
             </div>
+            <UploadModal ref={uploadModelRef} />
             <SpendingModal ref={modalRef} onSpendingChanged={() => fetchSpending()} />
         </div>
     );

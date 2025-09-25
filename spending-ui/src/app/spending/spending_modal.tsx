@@ -8,21 +8,25 @@ import React, { useEffect, useImperativeHandle } from "react";
 import { forwardRef } from "react"
 import { useMessage } from "../../components/message"
 
-export interface SpendingModalRef {
+export interface SpendingModalRef
+{
     open: () => void;
 }
 
-export interface SpendingModalProps {
+export interface SpendingModalProps
+{
     onSpendingChanged?: () => void
 }
 
-const SpendingModal = forwardRef<SpendingModalRef, SpendingModalProps>((props, ref) => {
+const SpendingModal = forwardRef<SpendingModalRef, SpendingModalProps>((props, ref) =>
+{
     const [categories, setCategories] = React.useState<Category[]>([]);
     const [isOpen, setIsOpen] = React.useState(false);
     const [formData, setFormData] = React.useState({ amount: "", categoryId: "", storeId: "", spendingDate: "", remark: "" });
     const { showMessage } = useMessage();
 
-    useEffect(() => {
+    useEffect(() =>
+    {
         fetchCategories();
     }, []);
 
@@ -30,27 +34,32 @@ const SpendingModal = forwardRef<SpendingModalRef, SpendingModalProps>((props, r
         open: open,
     }));
 
-    async function fetchCategories() {
+    async function fetchCategories()
+    {
         const categories = await getCategoryListAsync()
         setCategories(categories)
     }
 
-    function open() {
+    function open()
+    {
         setFormData({ amount: "", categoryId: "", storeId: "", spendingDate: "", remark: "" });
         setIsOpen(!isOpen);
     }
 
-    function close() {
+    function close()
+    {
         setIsOpen(false);
     }
 
-    async function submit() {
-        if (formData.amount === "" || isNaN(parseFloat(formData.amount))) {
+    async function submit()
+    {
+        if (formData.amount === "" || isNaN(parseFloat(formData.amount)))
+        {
             showMessage("Amount is required and must be a number");
             return;
         }
 
-        var requestData: CreateSpendingDto = {
+        const requestData: CreateSpendingDto = {
             amount: parseFloat(formData.amount),
             remark: formData.remark,
             spendingDate: formData.spendingDate === "" ? null : new Date(formData.spendingDate),
@@ -62,13 +71,17 @@ const SpendingModal = forwardRef<SpendingModalRef, SpendingModalProps>((props, r
         close()
     }
 
-    function renderStores() {
-        if (formData.categoryId === "") {
+    function renderStores()
+    {
+        if (formData.categoryId === "")
+        {
             return null;
         }
-        else {
+        else
+        {
             const category = categories.find(c => c.id === formData.categoryId);
-            if (!category) {
+            if (!category)
+            {
                 return null;
             }
             return (
