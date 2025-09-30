@@ -1,0 +1,58 @@
+name: Test Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-api:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.23.x
+
+      - name: Download modules
+        working-directory: spending-api
+        run: go mod download
+
+      - name: Vet
+        working-directory: spending-api
+        run: go vet ./...
+
+      # - name: Test
+      #   working-directory: spending-api
+      #   run: go test -race -cover ./...
+
+      - name: Build
+        working-directory: spending-api
+        run: go build -o spending-api ./...
+
+  build-ui:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        working-directory: spending-ui
+        run: npm install
+
+      - name: Build
+        working-directory: spending-ui
+        run: npm run build
