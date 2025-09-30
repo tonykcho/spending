@@ -10,12 +10,16 @@ import (
 )
 
 type uploadReceiptHandler struct {
-	spending_repo spending_repo.SpendingRepository
+	spending_repo     spending_repo.SpendingRepository
+	paddle_ocr_client external_clients.PaddleOcrClient
+	ollama_client     external_clients.OllamaClient
 }
 
-func NewUploadReceiptHandler(spendingRepo spending_repo.SpendingRepository) *uploadReceiptHandler {
+func NewUploadReceiptHandler(spendingRepo spending_repo.SpendingRepository, paddleOcrClient external_clients.PaddleOcrClient, ollamaClient external_clients.OllamaClient) *uploadReceiptHandler {
 	return &uploadReceiptHandler{
-		spending_repo: spendingRepo,
+		spending_repo:     spendingRepo,
+		paddle_ocr_client: paddleOcrClient,
+		ollama_client:     ollamaClient,
 	}
 }
 
@@ -38,7 +42,7 @@ func (handler *uploadReceiptHandler) Handle(writer http.ResponseWriter, request 
 	}
 	defer file.Close()
 
-	ocrResult, err := external_clients.SendPaddleOcrRequest(ctx, file)
+	ocrResult, err := handler.paddle_ocr_client.SendPaddleOcrRequest(ctx, file)
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusBadRequest)

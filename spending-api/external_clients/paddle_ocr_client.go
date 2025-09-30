@@ -13,8 +13,19 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
+type PaddleOcrClient interface {
+	SendPaddleOcrRequest(ctx context.Context, file multipart.File) ([]string, error)
+}
+
+type paddleOcrClient struct {
+}
+
+func NewPaddleOcrClient() PaddleOcrClient {
+	return &paddleOcrClient{}
+}
+
 // Send http post request with jpeg/png content type to paddle ocr server, get back the ocr string array result
-func SendPaddleOcrRequest(ctx context.Context, file multipart.File) ([]string, error) {
+func (c *paddleOcrClient) SendPaddleOcrRequest(ctx context.Context, file multipart.File) ([]string, error) {
 	tracer := otel.Tracer("spending-api")
 	_, span := tracer.Start(ctx, "SendPaddleOcrRequest")
 	defer span.End()

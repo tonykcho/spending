@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"spending/data_access"
+	"spending/external_clients"
 	"spending/middlewares"
 	"spending/repositories"
 	"spending/repositories/category_repo"
@@ -62,6 +63,9 @@ func NewContainer(db *sql.DB) *Container {
 	spendingRepo := spending_repo.NewSpendingRepository(db, categoryRepo)
 	unitOfWork := repositories.NewUnitOfWork(db)
 
+	paddleOcrClient := external_clients.NewPaddleOcrClient()
+	ollamaClient := external_clients.NewOllamaClient()
+
 	return &Container{
 		CategoryRepository: categoryRepo,
 		SpendingRepository: spendingRepo,
@@ -78,7 +82,7 @@ func NewContainer(db *sql.DB) *Container {
 		GetSpendingHandler:     spending_handlers.NewGetSpendingHandler(spendingRepo),
 		GetSpendingListHandler: spending_handlers.NewGetSpendingListHandler(spendingRepo),
 		DeleteSpendingHandler:  spending_handlers.NewDeleteSpendingHandler(spendingRepo, unitOfWork),
-		UploadReceiptHandler:   spending_handlers.NewUploadReceiptHandler(spendingRepo),
+		UploadReceiptHandler:   spending_handlers.NewUploadReceiptHandler(spendingRepo, paddleOcrClient, ollamaClient),
 
 		// CreateStoreHandler:  store_handlers.NewCreateStoreHandler(storeRepo, categoryRepo, unitOfWork),
 		DeleteStoreHandler:  store_handlers.NewDeleteStoreHandler(storeRepo, unitOfWork),
