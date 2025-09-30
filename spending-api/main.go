@@ -94,6 +94,7 @@ func main() {
 	router := mux.NewRouter()
 	router.Use(middlewares.LoggingMiddleware)
 	router.Use(middlewares.MetricsMiddleware)
+	router.Use(middlewares.AuthMiddleware)
 	db := data_access.OpenDatabase()
 	defer db.Close()
 
@@ -128,22 +129,22 @@ func configureLogging() {
 func configureEndpoints(router *mux.Router, db *sql.DB) {
 	container := NewContainer(db)
 
-	router.HandleFunc("/spending/{id}", container.GetSpendingHandler.Handle).Methods("GET")
-	router.HandleFunc("/spending", container.GetSpendingListHandler.Handle).Methods("GET")
-	router.HandleFunc("/spending", container.CreateSpendingHandler.Handle).Methods("POST")
-	router.HandleFunc("/spending/{id}", container.DeleteSpendingHandler.Handle).Methods("DELETE")
-	router.HandleFunc("/upload", container.UploadReceiptHandler.Handle).Methods("POST")
+	router.HandleFunc("/api/spending/{id}", container.GetSpendingHandler.Handle).Methods("GET")
+	router.HandleFunc("/api/spending", container.GetSpendingListHandler.Handle).Methods("GET")
+	router.HandleFunc("/api/spending", container.CreateSpendingHandler.Handle).Methods("POST")
+	router.HandleFunc("/api/spending/{id}", container.DeleteSpendingHandler.Handle).Methods("DELETE")
+	router.HandleFunc("/api/upload", container.UploadReceiptHandler.Handle).Methods("POST")
 
-	router.HandleFunc("/categories/{id}", container.GetCategoryHandler.Handle).Methods("GET")
-	router.HandleFunc("/categories", container.GetCategoryListHandler.Handle).Methods("GET")
-	router.HandleFunc("/categories", container.CreateCategoryHandler.Handle).Methods("POST")
-	router.HandleFunc("/categories/{id}", container.UpdateCategoryHandler.Handle).Methods("PUT")
-	router.HandleFunc("/categories/{id}", container.DeleteCategoryHandler.Handle).Methods("DELETE")
+	router.HandleFunc("/api/categories/{id}", container.GetCategoryHandler.Handle).Methods("GET")
+	router.HandleFunc("/api/categories", container.GetCategoryListHandler.Handle).Methods("GET")
+	router.HandleFunc("/api/categories", container.CreateCategoryHandler.Handle).Methods("POST")
+	router.HandleFunc("/api/categories/{id}", container.UpdateCategoryHandler.Handle).Methods("PUT")
+	router.HandleFunc("/api/categories/{id}", container.DeleteCategoryHandler.Handle).Methods("DELETE")
 
-	router.HandleFunc("/stores/{id}", container.GetStoreHandler.Handle).Methods("GET")
-	router.HandleFunc("/stores", container.GetStoreListHandler.Handle).Methods("GET")
-	// router.HandleFunc("/stores", container.CreateStoreHandler.Handle).Methods("POST")
-	router.HandleFunc("/stores/{id}", container.DeleteStoreHandler.Handle).Methods("DELETE")
+	router.HandleFunc("/api/stores/{id}", container.GetStoreHandler.Handle).Methods("GET")
+	router.HandleFunc("/api/stores", container.GetStoreListHandler.Handle).Methods("GET")
+	// router.HandleFunc("/api/stores", container.CreateStoreHandler.Handle).Methods("POST")
+	router.HandleFunc("/api/stores/{id}", container.DeleteStoreHandler.Handle).Methods("DELETE")
 
 	router.HandleFunc("/metrics", promhttp.Handler().ServeHTTP)
 }

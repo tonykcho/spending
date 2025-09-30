@@ -1,13 +1,15 @@
 ###
-Get http://localhost:8001/spending
+Get http://localhost:8001/api/spending
+Headers:
+Authorization: Basic YWRtaW46cGFzc3dvcmQ=
 
 ###
 
-Get http://localhost:8001/spending/f33c5a82-796c-4f8f-b4d9-080440adeb1f
+Get http://localhost:8001/api/spending/f33c5a82-796c-4f8f-b4d9-080440adeb1f
 
 ###
 
-POST http://localhost:8001/spending HTTP/1.1
+POST http://localhost:8001/api/spending HTTP/1.1
 Content-Type: application/json
 
 {
@@ -19,15 +21,15 @@ Content-Type: application/json
 
 ###
 
-Get http://localhost:8001/categories
+Get http://localhost:8001/api/categories
 
 ###
 
-Get http://localhost:8001/categories/f653fceb-f5f4-465d-95ab-dc383232a2a5
+Get http://localhost:8001/api/categories/f653fceb-f5f4-465d-95ab-dc383232a2a5
 
 ###
 
-POST http://localhost:8001/categories HTTP/1.1
+POST http://localhost:8001/api/categories HTTP/1.1
 Content-Type: application/json
 
 {
@@ -40,10 +42,10 @@ Content-Type: application/json
 }
 
 ###
-Get http://localhost:8001/stores
+Get http://localhost:8001/api/stores
 
 ###
-POST http://localhost:8001/stores HTTP/1.1
+POST http://localhost:8001/api/stores HTTP/1.1
 Content-Type: application/json
 
 {

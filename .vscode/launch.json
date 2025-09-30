@@ -12,7 +12,9 @@
             "preLaunchTask": "Start_Dependency_Containers",
             "program": "${workspaceFolder}/spending-api/main.go",
             "env": {
-                "APP_ENV": "dev"
+                "APP_ENV": "dev",
+                "BASIC_AUTH_USER": "admin",
+                "BASIC_AUTH_PASSWORD": "password"
             },
         },
         {

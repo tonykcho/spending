@@ -12,6 +12,8 @@ type ConnectionStrings struct {
 	DatabaseConnection string `json:"DatabaseConnection"`
 	PaddleOcrHost      string `json:"PaddleOcrHost"`
 	OllamaHost         string `json:"OllamaHost"`
+	BasicAuthUser      string
+	BasicAuthPassword  string
 }
 
 type Config struct {
@@ -46,6 +48,28 @@ func GetOllamaHost() string {
 		loadConfig()
 	}
 	return AppConfig.ConnectionStrings.OllamaHost
+}
+
+func GetBasicAuthUser() string {
+	if AppConfig.ConnectionStrings.BasicAuthUser == "" {
+		loadAuthFromEnv()
+	}
+	return AppConfig.ConnectionStrings.BasicAuthUser
+}
+
+func GetBasicAuthPassword() string {
+	if AppConfig.ConnectionStrings.BasicAuthPassword == "" {
+		loadAuthFromEnv()
+	}
+	return AppConfig.ConnectionStrings.BasicAuthPassword
+}
+
+func loadAuthFromEnv() {
+	user := os.Getenv("BASIC_AUTH_USER")
+	password := os.Getenv("BASIC_AUTH_PASSWORD")
+
+	AppConfig.ConnectionStrings.BasicAuthUser = user
+	AppConfig.ConnectionStrings.BasicAuthPassword = password
 }
 
 func loadConfig() {
