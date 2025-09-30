@@ -48,6 +48,7 @@ type Container struct {
 	GetSpendingHandler     request_handlers.RequestHandler
 	GetSpendingListHandler request_handlers.RequestHandler
 	DeleteSpendingHandler  request_handlers.RequestHandler
+	UploadReceiptHandler   request_handlers.RequestHandler
 
 	// CreateStoreHandler  request_handlers.RequestHandler
 	DeleteStoreHandler  request_handlers.RequestHandler
@@ -77,6 +78,7 @@ func NewContainer(db *sql.DB) *Container {
 		GetSpendingHandler:     spending_handlers.NewGetSpendingHandler(spendingRepo),
 		GetSpendingListHandler: spending_handlers.NewGetSpendingListHandler(spendingRepo),
 		DeleteSpendingHandler:  spending_handlers.NewDeleteSpendingHandler(spendingRepo, unitOfWork),
+		UploadReceiptHandler:   spending_handlers.NewUploadReceiptHandler(spendingRepo),
 
 		// CreateStoreHandler:  store_handlers.NewCreateStoreHandler(storeRepo, categoryRepo, unitOfWork),
 		DeleteStoreHandler:  store_handlers.NewDeleteStoreHandler(storeRepo, unitOfWork),
@@ -130,6 +132,7 @@ func configureEndpoints(router *mux.Router, db *sql.DB) {
 	router.HandleFunc("/spending", container.GetSpendingListHandler.Handle).Methods("GET")
 	router.HandleFunc("/spending", container.CreateSpendingHandler.Handle).Methods("POST")
 	router.HandleFunc("/spending/{id}", container.DeleteSpendingHandler.Handle).Methods("DELETE")
+	router.HandleFunc("/upload", container.UploadReceiptHandler.Handle).Methods("POST")
 
 	router.HandleFunc("/categories/{id}", container.GetCategoryHandler.Handle).Methods("GET")
 	router.HandleFunc("/categories", container.GetCategoryListHandler.Handle).Methods("GET")

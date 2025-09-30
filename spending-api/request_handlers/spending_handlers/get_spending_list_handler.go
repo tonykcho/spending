@@ -23,11 +23,11 @@ func NewGetSpendingListHandler(spendingRepo spending_repo.SpendingRepository) re
 
 func (handler *getSpendingListHandler) Handle(writer http.ResponseWriter, request *http.Request) {
 	tracer := otel.Tracer("spending-api")
-	context, span := tracer.Start(request.Context(), "GetSpendingListHandler")
+	ctx, span := tracer.Start(request.Context(), "GetSpendingListHandler")
 	defer span.End()
 
 	log.Info().Msg("Fetching spending list...")
-	records, err := handler.spending_repo.GetSpendingList(context, nil)
+	records, err := handler.spending_repo.GetSpendingList(ctx, nil)
 
 	if err != nil {
 		utils.TraceError(span, err)
@@ -35,7 +35,7 @@ func (handler *getSpendingListHandler) Handle(writer http.ResponseWriter, reques
 		return
 	}
 
-	err = handler.spending_repo.LoadSpendingListCategory(context, nil, records)
+	err = handler.spending_repo.LoadSpendingListCategory(ctx, nil, records)
 	if err != nil {
 		utils.TraceError(span, err)
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
@@ -44,6 +44,6 @@ func (handler *getSpendingListHandler) Handle(writer http.ResponseWriter, reques
 
 	response := mappers.MapSpendingList(records)
 
-	err = utils.Encode(context, writer, http.StatusOK, response)
+	err = utils.Encode(ctx, writer, http.StatusOK, response)
 	utils.TraceError(span, err)
 }

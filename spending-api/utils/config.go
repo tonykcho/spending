@@ -10,6 +10,8 @@ import (
 type ConnectionStrings struct {
 	PostgresConnection string `json:"PostgresConnection"`
 	DatabaseConnection string `json:"DatabaseConnection"`
+	PaddleOcrHost      string `json:"PaddleOcrHost"`
+	OllamaHost         string `json:"OllamaHost"`
 }
 
 type Config struct {
@@ -30,6 +32,20 @@ func GetDatabaseConnection() string {
 		loadConfig()
 	}
 	return AppConfig.ConnectionStrings.DatabaseConnection
+}
+
+func GetPaddleOcrHost() string {
+	if AppConfig.ConnectionStrings.PaddleOcrHost == "" {
+		loadConfig()
+	}
+	return AppConfig.ConnectionStrings.PaddleOcrHost
+}
+
+func GetOllamaHost() string {
+	if AppConfig.ConnectionStrings.OllamaHost == "" {
+		loadConfig()
+	}
+	return AppConfig.ConnectionStrings.OllamaHost
 }
 
 func loadConfig() {
