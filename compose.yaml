@@ -18,16 +18,24 @@ services:
       - "traefik.http.routers.api.entrypoints=api" # Use the api entrypoint
       - "traefik.http.services.api.loadbalancer.server.port=8001"
       # - "traefik.http.routers.api.rule=Host(`traefik.api.localhost`)"
+    restart: unless-stopped
+
   postgres:
     image: postgres:latest
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: pwd
       POSTGRES_DB: spending
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports:
       - 5432
+    restart: unless-stopped
     # volumes:
-    #   - postgres_data:/var/lib/postgresql/data
+    # - postgres_data:/var/lib/postgresql/data
 
   jaeger:
     image: jaegertracing/all-in-one
@@ -40,6 +48,7 @@ services:
       - "traefik.http.routers.jaeger.rule=PathPrefix(`/`)"
       - "traefik.http.routers.jaeger.entrypoints=jaeger" # Use the jaeger entrypoint
       - "traefik.http.services.jaeger.loadbalancer.server.port=16686"
+    restart: unless-stopped
 
   prometheus:
     image: prom/prometheus
@@ -54,6 +63,7 @@ services:
       - "traefik.http.routers.prometheus.entrypoints=prometheus" # Use the prometheus entrypoint
       - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
       # - "traefik.http.routers.prometheus.rule=Host(`traefik.prometheus.localhost`)"
+    restart: unless-stopped
 
   loki:
     image: grafana/loki
@@ -61,6 +71,7 @@ services:
     ports:
       - 3100
     command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
 
   promtail:
     image: grafana/promtail
@@ -71,6 +82,7 @@ services:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on: [loki]
+    restart: unless-stopped
 
   grafana:
     image: grafana/grafana
@@ -86,6 +98,7 @@ services:
       - "traefik.http.routers.grafana.entrypoints=grafana" # Use the grafana entrypoint
       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
       # - "traefik.http.routers.grafana.rule=Host(`traefik.grafana.localhost`)"
+    restart: unless-stopped
 
   traefik:
     image: traefik
@@ -114,6 +127,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - "./traefik-logs:/var/log" # Mount a directory for log files
+    restart: unless-stopped
     # labels:
     #   - "traefik.enable=true"
     #   - "traefik.http.routers.traefik.rule=PathPrefix(`/`)"
