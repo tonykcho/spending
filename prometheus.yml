@@ -1,0 +1,8 @@
+scrape_configs:
+  - job_name: "spending"
+    scheme: http
+    scrape_interval: 15s
+    tls_config:
+      insecure_skip_verify: true
+    static_configs:
+      - targets: ["spending-api:8001"]

@@ -154,7 +154,7 @@ func configureOpenTelemetry() {
 
 	exporter, err := otlptracegrpc.New(ctx,
 		otlptracegrpc.WithInsecure(),
-		otlptracegrpc.WithEndpoint("localhost:4317"),
+		otlptracegrpc.WithEndpoint(utils.GetJaeger()),
 	)
 
 	utils.CheckError(err)

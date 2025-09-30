@@ -1,0 +1,11 @@
+# https://grafana.com/docs/loki/latest/clients/promtail/configuration/
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: spending-api-logs
+    static_configs:
+      - labels:
+          job: spending-api
+          __path__: /logs/spending-api-*.log

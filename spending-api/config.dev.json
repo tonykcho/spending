@@ -1,8 +1,9 @@
 {
     "ConnectionStrings": {
-        "PostgresConnection": "user=postgres password=pwd sslmode=disable",
-        "DatabaseConnection": "user=postgres password=pwd dbname=spending sslmode=disable",
+        "PostgresConnection": "host=localhost port=5432 user=postgres password=pwd sslmode=disable",
+        "DatabaseConnection": "host=localhost port=5432 user=postgres password=pwd dbname=spending sslmode=disable",
         "PaddleOcrHost": "http://192.168.50.151:8000",
-        "OllamaHost": "http://192.168.50.170:11434"
+        "OllamaHost": "http://192.168.50.170:11434",
+        "Jaeger": "localhost:4317"
     }
 }

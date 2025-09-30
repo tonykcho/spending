@@ -14,6 +14,7 @@ type ConnectionStrings struct {
 	OllamaHost         string `json:"OllamaHost"`
 	BasicAuthUser      string
 	BasicAuthPassword  string
+	Jaeger             string `json:"Jaeger"`
 }
 
 type Config struct {
@@ -48,6 +49,13 @@ func GetOllamaHost() string {
 		loadConfig()
 	}
 	return AppConfig.ConnectionStrings.OllamaHost
+}
+
+func GetJaeger() string {
+	if AppConfig.ConnectionStrings.Jaeger == "" {
+		loadConfig()
+	}
+	return AppConfig.ConnectionStrings.Jaeger
 }
 
 func GetBasicAuthUser() string {
