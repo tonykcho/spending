@@ -35,7 +35,7 @@ jobs:
 
       - name: Build
         working-directory: spending-api
-        run: go build -o spending-api ./...
+        run: go build ./...
 
   build-ui:
     runs-on: ubuntu-latest
