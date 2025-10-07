@@ -40,22 +40,6 @@ const UploadModal = forwardRef<UploadModalRef, UploadModalProps>((props, ref) =>
                 setImage(file);
                 await uploadReceipt(file);
             }
-            // // set image from base64 to file
-            // if (imageSrc)
-            // {
-            //     const byteString = atob(imageSrc.split(',')[1]);
-            //     const mimeString = imageSrc.split(',')[0].split(':')[1].split(';')[0];
-            //     const ab = new ArrayBuffer(byteString.length);
-            //     const ia = new Uint8Array(ab);
-            //     for (let i = 0; i < byteString.length; i++)
-            //     {
-            //         ia[i] = byteString.charCodeAt(i);
-            //     }
-            //     const file = new Blob([ab], { type: mimeString });
-            //     const fileWithName = new File([file], "webcam.jpg", { type: mimeString });
-            //     setImage(fileWithName);
-            //     await uploadReceipt(fileWithName);
-            // }
         },
         [webcamRef]
     );
@@ -66,6 +50,9 @@ const UploadModal = forwardRef<UploadModalRef, UploadModalProps>((props, ref) =>
 
     function open()
     {
+        //reset image and receipt
+        setImage(null);
+        setReceipt(null);
         setIsOpen(!isOpen);
     }
 
