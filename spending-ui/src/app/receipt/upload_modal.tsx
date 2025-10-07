@@ -1,13 +1,13 @@
 'use client'
 
 import { useLoading } from "@/components/loading";
-import { Receipt } from "@/models/receipt";
-import { CreateSpendingDto } from "@/models/spending";
-import { uploadReceiptAsync } from "@/services/receipt-service";
-import { createSpendingAsync } from "@/services/spending-service";
+import { CreateReceiptRequest } from "@/models/receipt";
+import { ReceiptOcr } from "@/models/receipt_ocr";
+import { createReceiptAsync, uploadReceiptAsync } from "@/services/receipt-service";
 import Image from "next/image";
 import React from "react";
 import { forwardRef, useImperativeHandle } from "react";
+import Webcam from "react-webcam";
 
 export interface UploadModalRef
 {
@@ -21,10 +21,44 @@ export interface UploadModalProps
 
 const UploadModal = forwardRef<UploadModalRef, UploadModalProps>((props, ref) =>
 {
+    const webcamRef = React.useRef<Webcam>(null);
     const [isOpen, setIsOpen] = React.useState(false);
     const [image, setImage] = React.useState<File | null>(null);
-    const [receipt, setReceipt] = React.useState<Receipt | null>(null);
+    const [receipt, setReceipt] = React.useState<ReceiptOcr | null>(null);
     const { showLoading, hideLoading } = useLoading();
+
+    const capture = React.useCallback(
+        async () =>
+        {
+            const imageSrc = webcamRef.current?.getScreenshot();
+            // set image with blob
+            if (imageSrc)
+            {
+                const res = await fetch(imageSrc);
+                const blob = await res.blob();
+                const file = new File([blob], "webcam.jpg", { type: blob.type });
+                setImage(file);
+                await uploadReceipt(file);
+            }
+            // // set image from base64 to file
+            // if (imageSrc)
+            // {
+            //     const byteString = atob(imageSrc.split(',')[1]);
+            //     const mimeString = imageSrc.split(',')[0].split(':')[1].split(';')[0];
+            //     const ab = new ArrayBuffer(byteString.length);
+            //     const ia = new Uint8Array(ab);
+            //     for (let i = 0; i < byteString.length; i++)
+            //     {
+            //         ia[i] = byteString.charCodeAt(i);
+            //     }
+            //     const file = new Blob([ab], { type: mimeString });
+            //     const fileWithName = new File([file], "webcam.jpg", { type: mimeString });
+            //     setImage(fileWithName);
+            //     await uploadReceipt(fileWithName);
+            // }
+        },
+        [webcamRef]
+    );
 
     useImperativeHandle(ref, () => ({
         open: open,
@@ -47,11 +81,7 @@ const UploadModal = forwardRef<UploadModalRef, UploadModalProps>((props, ref) =>
         if (file && (file.type === "image/jpeg" || file.type === "image/png"))
         {
             setImage(file);
-            showLoading();
-            const result = await uploadReceiptAsync(file)
-            hideLoading();
-            setReceipt(result);
-            console.log("Upload result:", result);
+            await uploadReceipt(file);
         }
         else
         {
@@ -59,16 +89,23 @@ const UploadModal = forwardRef<UploadModalRef, UploadModalProps>((props, ref) =>
         }
     }
 
-    async function submitReceipt(receipt: Receipt)
+    async function uploadReceipt(file: File)
     {
-        const requestData: CreateSpendingDto = {
-            amount: parseFloat(receipt.items.reduce((sum, item) => sum + item.price, 0).toFixed(2)),
-            remark: receipt.storeName,
-            spendingDate: receipt.date,
-            categoryId: null,
-            storeId: null,
+        showLoading();
+        const result = await uploadReceiptAsync(file)
+        hideLoading();
+        setReceipt(result);
+    }
+
+    async function submitReceipt(receipt: ReceiptOcr)
+    {
+        const requestData: CreateReceiptRequest = {
+            storeName: receipt.storeName,
+            date: receipt.date,
+            items: receipt.items,
+            totalAmount: parseFloat(receipt.items.reduce((sum, item) => sum + item.price, 0).toFixed(2)),
         };
-        await createSpendingAsync(requestData);
+        await createReceiptAsync(requestData);
         props.onUploadCompleted?.();
         close()
     }
@@ -125,6 +162,12 @@ const UploadModal = forwardRef<UploadModalRef, UploadModalProps>((props, ref) =>
         <div className={`flex flex-col items-center spending-modal fixed w-full left-0 h-5/6 ${isOpen ? 'top-1/6' : 'top-full'} `}>
             <div className="bg-white border border-b-0 rounded-t border-gray-600 w-9/10 h-full flex flex-col overflow-y-auto">
                 <div className="flex-1 flex flex-col items-center justify-center">
+                    {!image && (
+                        <div className="flex flex-col items-center">
+                            <Webcam ref={webcamRef} audio={false} screenshotFormat="image/jpeg" width={400} height={400} className="mb-4" />
+                            <button className="btn btn-secondary h-12 mx-8 mb-4" onClick={capture}>Capture Photo</button>
+                        </div>
+                    )}
                     {renderImagePreview()}
                     {renderReceiptDetails()}
                 </div>

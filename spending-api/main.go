@@ -53,6 +53,7 @@ type Container struct {
 	GetSpendingListHandler request_handlers.RequestHandler
 	DeleteSpendingHandler  request_handlers.RequestHandler
 
+	GetReceiptsHandler   request_handlers.RequestHandler
 	CreateReceiptHandler request_handlers.RequestHandler
 	UploadReceiptHandler request_handlers.RequestHandler
 
@@ -90,6 +91,7 @@ func NewContainer(db *sql.DB) *Container {
 		GetSpendingListHandler: spending_handlers.NewGetSpendingListHandler(spendingRepo),
 		DeleteSpendingHandler:  spending_handlers.NewDeleteSpendingHandler(spendingRepo, unitOfWork),
 
+		GetReceiptsHandler:   receipt_handlers.NewGetReceiptsHandler(receiptRepo),
 		CreateReceiptHandler: receipt_handlers.NewCreateReceiptHandler(receiptRepo, receiptItemRepo, unitOfWork),
 		UploadReceiptHandler: receipt_handlers.NewUploadReceiptHandler(paddleOcrClient, ollamaClient),
 
@@ -147,6 +149,7 @@ func configureEndpoints(router *mux.Router, db *sql.DB) {
 	router.HandleFunc("/api/spending", container.CreateSpendingHandler.Handle).Methods("POST")
 	router.HandleFunc("/api/spending/{id}", container.DeleteSpendingHandler.Handle).Methods("DELETE")
 
+	router.HandleFunc("/api/receipts", container.GetReceiptsHandler.Handle).Methods("GET")
 	router.HandleFunc("/api/receipts", container.CreateReceiptHandler.Handle).Methods("POST")
 	router.HandleFunc("/api/receipts/upload", container.UploadReceiptHandler.Handle).Methods("POST")
 

@@ -44,6 +44,39 @@ func (repo *receiptRepository) GetReceiptByUUId(ctx context.Context, tx *sql.Tx,
 	return receipt, err
 }
 
+func (repo *receiptRepository) GetReceipts(ctx context.Context, tx *sql.Tx) ([]*models.Receipt, error) {
+	tracer := otel.Tracer("spending-api")
+	_, span := tracer.Start(ctx, "DB:GetReceipts")
+	defer span.End()
+
+	query := `
+		SELECT
+			id,
+			uuid,
+			store_name,
+			total,
+			date,
+			created_at,
+			updated_at
+		FROM receipts
+		WHERE is_deleted = FALSE
+		ORDER BY date DESC, created_at DESC
+	`
+
+	var dbTx repositories.DbTx = repo.db
+	if tx != nil {
+		dbTx = tx
+	}
+
+	dbQuery := func() (*sql.Rows, error) {
+		return dbTx.Query(query)
+	}
+
+	receipts, err := repositories.QueryList(span, dbQuery, readReceipt)
+
+	return receipts, err
+}
+
 func readReceipt(rows *sql.Rows) *models.Receipt {
 	var receipt models.Receipt
 

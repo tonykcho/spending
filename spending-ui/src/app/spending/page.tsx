@@ -3,7 +3,7 @@ import { Spending } from "@/models/spending";
 import { deleteSpendingAsync, getSpendingListAsync } from "@/services/spending-service";
 import React, { useEffect } from "react";
 import SpendingModal, { SpendingModalRef } from "./spending_modal";
-import UploadModal, { UploadModalRef } from "./upload_modal";
+import UploadModal, { UploadModalRef } from "../receipt/upload_modal";
 
 export default function SpendingPage()
 {
