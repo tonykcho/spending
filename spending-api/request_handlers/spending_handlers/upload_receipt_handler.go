@@ -9,6 +9,7 @@ import (
 	"spending/utils"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel"
@@ -86,9 +87,15 @@ func processOllamaResult(result string) (*dto.ReceiptDto, error) {
 	}
 
 	store := parts[0]
+	dateString := parts[1]
+	date, err := time.Parse("2006-01-02", dateString)
+	if err != nil {
+		log.Info().Msgf("Error parsing date %s: %v", dateString, err)
+		date = time.Now()
+	}
 	items := make([]dto.ReceiptItemDto, 0)
 
-	for _, item := range parts[1:] {
+	for _, item := range parts[2:] {
 		itemParts := strings.Split(item, ":")
 		if len(itemParts) != 2 {
 			return nil, fmt.Errorf("invalid item format: %s", item)
@@ -115,6 +122,7 @@ func processOllamaResult(result string) (*dto.ReceiptDto, error) {
 
 	resultDto := &dto.ReceiptDto{
 		StoreName: store,
+		Date:      date,
 		Items:     items,
 	}
 

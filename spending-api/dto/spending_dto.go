@@ -16,6 +16,7 @@ type SpendingDto struct {
 
 type ReceiptDto struct {
 	StoreName string
+	Date      time.Time
 	Items     []ReceiptItemDto
 }
 

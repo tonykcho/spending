@@ -55,7 +55,7 @@ func (c *ollamaClient) GetJsonFromReceiptTextFromLLama3(ctx context.Context, tex
 	messages := []map[string]string{
 		{
 			"role":    "system",
-			"content": "提取店舖名和所有收據貨品(格式：店舖名|貨品1:價格1|貨品2:價格2)。不用解釋",
+			"content": "提取店舖名和所有收據貨品(格式：店舖名|日期|貨品1:價格1|貨品2:價格2)。不用解釋",
 		},
 		{
 			"role":    "user",

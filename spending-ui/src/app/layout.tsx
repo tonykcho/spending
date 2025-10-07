@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+// @ts-expect-error: TypeScript does not recognize CSS imports by default
 import "./globals.css";
 import TopNavBar from "@/components/top-nav-bar";
 import { MessageProvider } from "@/components/message";
+import { LoadingProvider } from "@/components/loading";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,19 +25,22 @@ export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}>)
+{
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <div className="w-screen h-screen flex flex-col">
-          <MessageProvider>
-            <TopNavBar />
-            <div className="flex flex-col flex-1 overflow-y-auto">
-              {children}
-            </div>
-          </MessageProvider>
+          <LoadingProvider>
+            <MessageProvider>
+              <TopNavBar />
+              <div className="flex flex-col flex-1 overflow-y-auto">
+                {children}
+              </div>
+            </MessageProvider>
+          </LoadingProvider>
         </div>
       </body>
     </html>

@@ -98,7 +98,7 @@ func main() {
 	router := mux.NewRouter()
 	router.Use(middlewares.LoggingMiddleware)
 	router.Use(middlewares.MetricsMiddleware)
-	router.Use(middlewares.AuthMiddleware)
+	// router.Use(middlewares.AuthMiddleware)
 	db := data_access.OpenDatabase()
 	defer db.Close()
 
