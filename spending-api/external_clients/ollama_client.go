@@ -8,8 +8,28 @@ import (
 	"net/http"
 	"spending/utils"
 
+	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel"
 )
+
+type OllamaResult struct {
+	Model              string              `json:"model"`
+	CreateAt           string              `json:"created_at"`
+	Message            OllamaResultMessage `json:"message"`
+	Done               bool                `json:"done"`
+	DoneReason         string              `json:"done_reason"`
+	TotalDuration      int64               `json:"total_duration"`
+	LoadDuration       int64               `json:"load_duration"`
+	PromptEvalCount    int64               `json:"prompt_eval_count"`
+	PromptEvalDuration int64               `json:"prompt_eval_duration"`
+	EvalCount          int64               `json:"eval_count"`
+	EvalDuration       int64               `json:"eval_duration"`
+}
+
+type OllamaResultMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
 
 type OllamaClient interface {
 	GetJsonFromReceiptTextFromLLama3(ctx context.Context, texts []string) (string, error)
@@ -33,19 +53,24 @@ func (c *ollamaClient) GetJsonFromReceiptTextFromLLama3(ctx context.Context, tex
 
 	// Construct the chat request payload
 	messages := []map[string]string{
-		{"role": "system", "content": "You are a helpful assistant that extracts structured data from receipts."},
-		{"role": "system", "content": "Respond only with JSON, no explanations."},
-		{"role": "system", "content": "Determine if the texts are receipts. If not, respond with {\"error\": \"not a receipt\"}."},
-		{"role": "system", "content": "If the texts are receipts, extract the following fields: store (string), date (string in YYYY-MM-DD format), total (number), items (array of objects with name (string), price (number), discount (number, optional))."},
-		{"role": "system", "content": "If any field is missing or cannot be determined, use null for that field."},
-		{"role": "system", "content": "Here is an example response for a valid receipt: {\"store\": \"Store Name\", \"date\": \"2023-10-01\", \"total\": 23.45, \"items\": [{\"name\": \"Item 1\", \"price\": 10.00}, {\"name\": \"Item 2\", \"price\": 15.00, \"discount\": 1.55}]}."},
-		{"role": "system", "content": "Preserve all the chinese characters in the receipt text."},
-		{"role": "user", "content": fmt.Sprintf("Extract the following receipt texts into JSON format with fields: store, date, total, items (with name, price, discount). Here are the texts: %v", texts)},
+		{
+			"role":    "system",
+			"content": "提取店舖名和所有收據貨品(格式：店舖名|貨品1:價格1|貨品2:價格2)。不用解釋",
+		},
+		{
+			"role":    "user",
+			"content": fmt.Sprintf("Receipt Texts: %v", texts),
+		},
 	}
 
+	// log.Info().Msgf("texts: %v", texts)
+	log.Info().Msgf("Sending messages to Ollama: %v", messages)
+
 	payload := map[string]interface{}{
-		"model":    "llama3",
+		"model":    "llama3.1:8b",
+		"options":  map[string]interface{}{"temperature": 0},
 		"messages": messages,
+		"stream":   false,
 	}
 
 	payloadBytes, err := json.Marshal(payload)
@@ -53,6 +78,8 @@ func (c *ollamaClient) GetJsonFromReceiptTextFromLLama3(ctx context.Context, tex
 		utils.TraceError(span, err)
 		return "", err
 	}
+
+	log.Info().Msgf("Sending request to Ollama at %s", url)
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(payloadBytes))
 	if err != nil {
@@ -75,5 +102,14 @@ func (c *ollamaClient) GetJsonFromReceiptTextFromLLama3(ctx context.Context, tex
 		return "", err
 	}
 
-	return "", nil
+	var ollamaResult OllamaResult
+	err = json.NewDecoder(response.Body).Decode(&ollamaResult)
+	if err != nil {
+		utils.TraceError(span, err)
+		return "", err
+	}
+
+	log.Info().Msgf("Ollama response received: %+v", ollamaResult)
+
+	return ollamaResult.Message.Content, nil
 }
