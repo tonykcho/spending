@@ -79,7 +79,7 @@ func (handler *uploadReceiptHandler) Handle(writer http.ResponseWriter, request 
 	utils.TraceError(span, err)
 }
 
-func processOllamaResult(result string) (*dto.ReceiptDto, error) {
+func processOllamaResult(result string) (*dto.ReceiptOcrDto, error) {
 	// The receipt result is in format: store, item1:price1, item2:price2
 	parts := strings.Split(result, "|")
 	if len(parts) < 1 {
@@ -93,7 +93,7 @@ func processOllamaResult(result string) (*dto.ReceiptDto, error) {
 		log.Info().Msgf("Error parsing date %s: %v", dateString, err)
 		date = time.Now()
 	}
-	items := make([]dto.ReceiptItemDto, 0)
+	items := make([]dto.ReceiptItemOcrDto, 0)
 
 	for _, item := range parts[2:] {
 		itemParts := strings.Split(item, ":")
@@ -108,7 +108,7 @@ func processOllamaResult(result string) (*dto.ReceiptDto, error) {
 			continue
 		}
 
-		items = append(items, dto.ReceiptItemDto{
+		items = append(items, dto.ReceiptItemOcrDto{
 			Name:  itemName,
 			Price: itemPrice,
 		})
@@ -120,7 +120,7 @@ func processOllamaResult(result string) (*dto.ReceiptDto, error) {
 		log.Info().Msgf("Extracted item: %s, price: %.2f", item.Name, item.Price)
 	}
 
-	resultDto := &dto.ReceiptDto{
+	resultDto := &dto.ReceiptOcrDto{
 		StoreName: store,
 		Date:      date,
 		Items:     items,

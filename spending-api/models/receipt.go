@@ -10,7 +10,7 @@ type Receipt struct {
 	Id        int
 	UUId      uuid.UUID
 	StoreName string
-	Total     float32
+	Total     float64
 	Date      time.Time
 	IsDeleted bool
 	DeletedAt time.Time
@@ -20,7 +20,7 @@ type Receipt struct {
 	Items []*ReceiptItem
 }
 
-func NewReceipt(storeName string, total float32, date time.Time) *Receipt {
+func NewReceipt(storeName string, total float64, date time.Time) *Receipt {
 	return &Receipt{
 		UUId:      uuid.New(),
 		StoreName: storeName,

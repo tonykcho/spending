@@ -13,14 +13,3 @@ type SpendingDto struct {
 	SpendingDate time.Time
 	Category     *CategoryDto
 }
-
-type ReceiptDto struct {
-	StoreName string
-	Date      time.Time
-	Items     []ReceiptItemDto
-}
-
-type ReceiptItemDto struct {
-	Name  string
-	Price float64
-}
