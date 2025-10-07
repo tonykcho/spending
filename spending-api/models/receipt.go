@@ -28,5 +28,6 @@ func NewReceipt(storeName string, total float64, date time.Time) *Receipt {
 		Date:      date,
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
+		Items:     make([]*ReceiptItem, 0),
 	}
 }

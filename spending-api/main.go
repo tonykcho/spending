@@ -10,10 +10,13 @@ import (
 	"spending/middlewares"
 	"spending/repositories"
 	"spending/repositories/category_repo"
+	"spending/repositories/receipt_item_repo"
+	"spending/repositories/receipt_repo"
 	"spending/repositories/spending_repo"
 	"spending/repositories/store_repo"
 	"spending/request_handlers"
 	"spending/request_handlers/category_handlers"
+	"spending/request_handlers/receipt_handlers"
 	"spending/request_handlers/spending_handlers"
 	"spending/request_handlers/store_handlers"
 	"spending/utils"
@@ -49,7 +52,9 @@ type Container struct {
 	GetSpendingHandler     request_handlers.RequestHandler
 	GetSpendingListHandler request_handlers.RequestHandler
 	DeleteSpendingHandler  request_handlers.RequestHandler
-	UploadReceiptHandler   request_handlers.RequestHandler
+
+	CreateReceiptHandler request_handlers.RequestHandler
+	UploadReceiptHandler request_handlers.RequestHandler
 
 	// CreateStoreHandler  request_handlers.RequestHandler
 	DeleteStoreHandler  request_handlers.RequestHandler
@@ -61,6 +66,8 @@ func NewContainer(db *sql.DB) *Container {
 	storeRepo := store_repo.NewStoreRepository(db)
 	categoryRepo := category_repo.NewCategoryRepository(db, storeRepo)
 	spendingRepo := spending_repo.NewSpendingRepository(db, categoryRepo)
+	receiptItemRepo := receipt_item_repo.NewReceiptItemRepository(db)
+	receiptRepo := receipt_repo.NewReceiptRepository(db, receiptItemRepo)
 	unitOfWork := repositories.NewUnitOfWork(db)
 
 	paddleOcrClient := external_clients.NewPaddleOcrClient()
@@ -82,7 +89,9 @@ func NewContainer(db *sql.DB) *Container {
 		GetSpendingHandler:     spending_handlers.NewGetSpendingHandler(spendingRepo),
 		GetSpendingListHandler: spending_handlers.NewGetSpendingListHandler(spendingRepo),
 		DeleteSpendingHandler:  spending_handlers.NewDeleteSpendingHandler(spendingRepo, unitOfWork),
-		UploadReceiptHandler:   spending_handlers.NewUploadReceiptHandler(spendingRepo, paddleOcrClient, ollamaClient),
+
+		CreateReceiptHandler: receipt_handlers.NewCreateReceiptHandler(receiptRepo, receiptItemRepo, unitOfWork),
+		UploadReceiptHandler: receipt_handlers.NewUploadReceiptHandler(paddleOcrClient, ollamaClient),
 
 		// CreateStoreHandler:  store_handlers.NewCreateStoreHandler(storeRepo, categoryRepo, unitOfWork),
 		DeleteStoreHandler:  store_handlers.NewDeleteStoreHandler(storeRepo, unitOfWork),
@@ -137,7 +146,9 @@ func configureEndpoints(router *mux.Router, db *sql.DB) {
 	router.HandleFunc("/api/spending", container.GetSpendingListHandler.Handle).Methods("GET")
 	router.HandleFunc("/api/spending", container.CreateSpendingHandler.Handle).Methods("POST")
 	router.HandleFunc("/api/spending/{id}", container.DeleteSpendingHandler.Handle).Methods("DELETE")
-	router.HandleFunc("/api/upload", container.UploadReceiptHandler.Handle).Methods("POST")
+
+	router.HandleFunc("/api/receipts", container.CreateReceiptHandler.Handle).Methods("POST")
+	router.HandleFunc("/api/receipts/upload", container.UploadReceiptHandler.Handle).Methods("POST")
 
 	router.HandleFunc("/api/categories/{id}", container.GetCategoryHandler.Handle).Methods("GET")
 	router.HandleFunc("/api/categories", container.GetCategoryListHandler.Handle).Methods("GET")

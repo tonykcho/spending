@@ -8,7 +8,7 @@ CREATE TABLE receipts (
     deleted_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-)
+);
 
 CREATE TABLE receipt_items (
     id SERIAL PRIMARY KEY,

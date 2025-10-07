@@ -1,11 +1,10 @@
-package spending_handlers
+package receipt_handlers
 
 import (
 	"fmt"
 	"net/http"
 	"spending/dto"
 	"spending/external_clients"
-	"spending/repositories/spending_repo"
 	"spending/utils"
 	"strconv"
 	"strings"
@@ -16,14 +15,12 @@ import (
 )
 
 type uploadReceiptHandler struct {
-	spending_repo     spending_repo.SpendingRepository
 	paddle_ocr_client external_clients.PaddleOcrClient
 	ollama_client     external_clients.OllamaClient
 }
 
-func NewUploadReceiptHandler(spendingRepo spending_repo.SpendingRepository, paddleOcrClient external_clients.PaddleOcrClient, ollamaClient external_clients.OllamaClient) *uploadReceiptHandler {
+func NewUploadReceiptHandler(paddleOcrClient external_clients.PaddleOcrClient, ollamaClient external_clients.OllamaClient) *uploadReceiptHandler {
 	return &uploadReceiptHandler{
-		spending_repo:     spendingRepo,
 		paddle_ocr_client: paddleOcrClient,
 		ollama_client:     ollamaClient,
 	}

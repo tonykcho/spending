@@ -11,6 +11,10 @@ import (
 
 type ReceiptRepository interface {
 	GetReceiptByUUId(ctx context.Context, tx *sql.Tx, uuid uuid.UUID) (*models.Receipt, error)
+	InsertReceipt(ctx context.Context, tx *sql.Tx, receipt *models.Receipt) (*models.Receipt, error)
+	DeleteReceipt(ctx context.Context, tx *sql.Tx, uuid uuid.UUID) error
+	LoadReceiptItems(ctx context.Context, tx *sql.Tx, receipt *models.Receipt) error
+	LoadReceiptsItems(ctx context.Context, tx *sql.Tx, receipts []*models.Receipt) error
 }
 
 type receiptRepository struct {

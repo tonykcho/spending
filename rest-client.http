@@ -54,3 +54,28 @@ Content-Type: application/json
 }
 
 ###
+
+POST http://localhost:8001/api/receipts HTTP/1.1
+Content-Type: application/json
+
+{
+  "storeName": "Wellcome",
+  "totalAmount": 100.0,
+  "date": "2023-10-01T00:00:00Z",
+  "items": [
+    {
+      "name": "Apple",
+      "price": 30.0
+    },
+    {
+      "name": "Banana",
+      "price": 20.0
+    },
+    {
+      "name": "Orange",
+      "price": 50.0
+    }
+  ]
+}
+
+###
